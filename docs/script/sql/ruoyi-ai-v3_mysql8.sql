@@ -3483,4 +3483,24 @@ INSERT INTO `test_tree` VALUES (11, '000000', 7, 108, 3, '子节点77', 0, 103, 
 INSERT INTO `test_tree` VALUES (12, '000000', 10, 108, 3, '子节点88', 0, 103, '2026-02-03 05:14:54', 1, NULL, NULL, 0);
 INSERT INTO `test_tree` VALUES (13, '000000', 10, 108, 3, '子节点99', 0, 103, '2026-02-03 05:14:54', 1, NULL, NULL, 0);
 
+-- AI生图记录表
+CREATE TABLE `image_record` (
+                                `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+                                `user_id` bigint NOT NULL COMMENT '用户ID',
+                                `model_id` bigint NOT NULL COMMENT '模型ID',
+                                `session_id` varchar(64) DEFAULT NULL COMMENT '会话ID',
+                                `prompt` text NOT NULL COMMENT '提示词',
+                                `size` varchar(20) DEFAULT NULL COMMENT '图片尺寸',
+                                `seed` int DEFAULT NULL COMMENT '随机种子',
+                                `image_url` varchar(500) NOT NULL COMMENT '图片URL',
+                                `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                `tenant_id` varchar(20) DEFAULT '000000' COMMENT '租户编号',
+                                `create_dept` bigint DEFAULT NULL COMMENT '创建部门',
+                                `create_by` bigint DEFAULT NULL COMMENT '创建者',
+                                `update_by` bigint DEFAULT NULL COMMENT '更新者',
+                                `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+                                PRIMARY KEY (`id`),
+                                KEY `idx_user_id` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='AI生图记录';
+
 SET FOREIGN_KEY_CHECKS = 1;

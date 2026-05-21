@@ -11,7 +11,8 @@ import lombok.Getter;
 @Getter
 public enum ImageModeType {
 
-    TONGYI_WANX("Tongyiwanx", "万相");
+    TONGYI_WANX("Tongyiwanx", "万相"),
+    OPENAI("OpenAI", "OpenAI兼容");
 
     private final String code;
     private final String description;

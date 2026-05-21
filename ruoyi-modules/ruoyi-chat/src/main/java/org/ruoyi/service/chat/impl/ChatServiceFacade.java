@@ -67,9 +67,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 聊天服务门面层
@@ -106,12 +104,6 @@ public class ChatServiceFacade implements IChatService {
 
     private final ToolProviderFactory toolProviderFactory;
 
-    /**
-     * 内存实例缓存，避免同一会话重复创建
-     * Key: sessionId, Value: MessageWindowChatMemory实例
-     */
-    private static final Map<Object, MessageWindowChatMemory> memoryCache = new ConcurrentHashMap<>();
-
 
 
     /**
@@ -133,7 +125,10 @@ public class ChatServiceFacade implements IChatService {
             throw new IllegalArgumentException("模型不存在: " + chatRequest.getModel());
         }
 
-        // 2. 构建上下文消息列表
+        // 保存用户消息（必须在 buildContextMessages 之前，因为 memory 从 DB 读历史）
+        chatMessageService.saveChatMessage(userId, chatRequest.getSessionId(), chatRequest.getContent(), RoleType.USER.getName(), chatRequest.getModel());
+
+        // 2. 构建上下文消息列表（从DB读历史，当前消息已包含在内，不再重复添加）
         List<ChatMessage> contextMessages = buildContextMessages(chatRequest);
 
         chatRequest.setEmitter(emitter);
@@ -141,9 +136,6 @@ public class ChatServiceFacade implements IChatService {
         chatRequest.setTokenValue(tokenValue);
         chatRequest.setChatModelVo(chatModelVo);
         chatRequest.setContextMessages(contextMessages);
-
-        // 保存用户消息
-        chatMessageService.saveChatMessage(userId, chatRequest.getSessionId(), chatRequest.getContent(), RoleType.USER.getName(), chatRequest.getModel());
 
         // 3. 处理特殊聊天模式（工作流、人机交互恢复、思考模式）
         SseEmitter sseEmitter = handleSpecialChatModes(chatRequest);
@@ -226,9 +218,12 @@ public class ChatServiceFacade implements IChatService {
             .modelName(chatRequest.getChatModelVo().getModelName())
             .build();
 
+        // 动态获取 npx 路径
+        String npxPath = resolveNpxPath();
+
         // Bing 搜索 MCP 客户端
         McpTransport bingTransport = new StdioMcpTransport.Builder()
-            .command(List.of("C:\\Program Files\\nodejs\\npx.cmd", "-y", "bing-cn-mcp"))
+            .command(List.of(npxPath, "-y", "bing-cn-mcp"))
             .logEvents(true)
             .build();
 
@@ -240,7 +235,7 @@ public class ChatServiceFacade implements IChatService {
 
         // Playwright MCP 客户端 - 浏览器自动化工具
         McpTransport playwrightTransport = new StdioMcpTransport.Builder()
-            .command(List.of("C:\\Program Files\\nodejs\\npx.cmd", "-y", "@playwright/mcp@latest"))
+            .command(List.of(npxPath, "-y", "@playwright/mcp@latest"))
             .logEvents(true)
             .build();
 
@@ -253,7 +248,7 @@ public class ChatServiceFacade implements IChatService {
         // 允许 AI 读取、写入、搜索文件（基于当前项目根目录）
         String userDir = System.getProperty("user.dir");
         McpTransport filesystemTransport = new StdioMcpTransport.Builder()
-            .command(List.of("C:\\Program Files\\nodejs\\npx.cmd", "-y",
+            .command(List.of(npxPath, "-y",
                 "@modelcontextprotocol/server-filesystem", userDir))
             .logEvents(true)
 
@@ -266,8 +261,7 @@ public class ChatServiceFacade implements IChatService {
 
         // 合并三个 MCP 客户端的工具
         ToolProvider toolProvider = McpToolProvider.builder()
-            // bingMcpClient,
-            .mcpClients(List.of(playwrightMcpClient, filesystemMcpClient))
+            .mcpClients(List.of(bingMcpClient, playwrightMcpClient, filesystemMcpClient))
             .build();
 
         // ========== LangChain4j Skills 基本用法 ==========
@@ -332,8 +326,12 @@ public class ChatServiceFacade implements IChatService {
         CompletableFuture.runAsync(() -> {
             try {
                 String result = supervisor.invoke(chatRequest.getContent());
-                SseMessageUtils.sendContent(userId, result);
-                SseMessageUtils.sendDone(userId);
+                if (result == null || result.isBlank()) {
+                    SseMessageUtils.sendError(userId, "模型返回为空，请检查模型余额或配置");
+                } else {
+                    SseMessageUtils.sendContent(userId, result);
+                    SseMessageUtils.sendDone(userId);
+                }
             } catch (Exception e) {
                 log.error("Supervisor 执行失败", e);
                 SseMessageUtils.sendError(userId, e.getMessage());
@@ -399,20 +397,17 @@ public class ChatServiceFacade implements IChatService {
      * @return MessageWindowChatMemory实例
      */
     private MessageWindowChatMemory createChatMemory(Object memoryId) {
-        // 先从缓存中获取
-        return memoryCache.computeIfAbsent(memoryId, key -> {
-            try {
-                PersistentChatMemoryStore store = new PersistentChatMemoryStore(chatMessageService);
-                return MessageWindowChatMemory.builder()
-                    .id(memoryId)
-                    .maxMessages(DEFAULT_MAX_MESSAGES)
-                    .chatMemoryStore(store)
-                    .build();
-            } catch (Exception e) {
-                log.warn("创建聊天内存失败: {}", e.getMessage());
-                return null;
-            }
-        });
+        try {
+            PersistentChatMemoryStore store = new PersistentChatMemoryStore(chatMessageService);
+            return MessageWindowChatMemory.builder()
+                .id(memoryId)
+                .maxMessages(DEFAULT_MAX_MESSAGES)
+                .chatMemoryStore(store)
+                .build();
+        } catch (Exception e) {
+            log.warn("创建聊天内存失败: {}", e.getMessage());
+            return null;
+        }
     }
 
 
@@ -472,9 +467,7 @@ public class ChatServiceFacade implements IChatService {
             }
         }
 
-        // 4. 添加经过增强的用户消息（放在最后）
-        messages.add(userMessage);
-
+        // 4. 历史消息已包含当前用户消息（saveChatMessage 在 buildContextMessages 之前调用）
         return messages;
     }
 
@@ -550,9 +543,9 @@ public class ChatServiceFacade implements IChatService {
 
             @Override
             public void onError(Throwable error) {
-                // 发送错误事件
                 SseMessageUtils.sendError(userId, error.getMessage());
                 log.error("流式响应错误: {}", error.getMessage());
+                SseMessageUtils.completeConnection(userId, tokenValue);
             }
         };
     }
@@ -609,6 +602,7 @@ public class ChatServiceFacade implements IChatService {
                 // 发送错误事件
                 SseMessageUtils.sendError(userId, error.getMessage());
                 log.error("流式响应错误: {}", error.getMessage(), error);
+                SseMessageUtils.completeConnection(userId, tokenValue);
 
                 // 转发给外部 handler
                 if (externalHandler != null) {
@@ -616,6 +610,35 @@ public class ChatServiceFacade implements IChatService {
                 }
             }
         };
+    }
+
+    private String resolveNpxPath() {
+        // 优先使用配置或环境变量
+        String fromEnv = System.getenv("NPX_PATH");
+        if (fromEnv != null && !fromEnv.isEmpty()) {
+            return fromEnv;
+        }
+        // 尝试 PATH 中查找
+        try {
+            ProcessBuilder pb = new ProcessBuilder("where", "npx.cmd");
+            Process p = pb.start();
+            String result = new String(p.getInputStream().readAllBytes()).trim();
+            if (!result.isEmpty()) {
+                return result.split("\\r?\\n")[0];
+            }
+        } catch (Exception ignored) {}
+        // 常见默认路径兜底
+        String[] candidates = {
+            "C:\\Program Files\\nodejs\\npx.cmd",
+            "D:\\Program Files\\nodejs\\npx.cmd",
+            System.getenv("APPDATA") + "\\npm\\npx.cmd"
+        };
+        for (String path : candidates) {
+            if (new java.io.File(path).exists()) {
+                return path;
+            }
+        }
+        return "npx";
     }
 }
 

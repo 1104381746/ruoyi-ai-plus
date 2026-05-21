@@ -54,7 +54,9 @@ public class ChatModelController extends BaseController {
      */
     @GetMapping("/modelList")
     public R<List<ChatModelVo>> modelList(ChatModelBo bo) {
-        bo.setCategory(ModelType.CHAT.getKey());
+        if (bo.getCategory() == null) {
+            bo.setCategory(ModelType.CHAT.getKey());
+        }
         return R.ok(chatModelService.queryList(bo));
     }
 
