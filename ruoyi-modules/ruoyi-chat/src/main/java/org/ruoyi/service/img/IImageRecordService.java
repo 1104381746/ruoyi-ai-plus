@@ -6,6 +6,6 @@ import org.ruoyi.domain.vo.ImageRecordVo;
 
 public interface IImageRecordService {
     ImageRecordVo generate(ImageRecordBo bo);
-    Page<ImageRecordVo> listByUser(int pageNum, int pageSize);
+    Page<ImageRecordVo> listByUser(int pageNum, int pageSize, String keyword);
     void deleteById(Long id);
 }

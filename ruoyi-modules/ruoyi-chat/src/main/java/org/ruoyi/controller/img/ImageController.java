@@ -24,8 +24,9 @@ public class ImageController {
     @GetMapping("/list")
     public R<Page<ImageRecordVo>> list(
             @RequestParam(defaultValue = "1") int pageNum,
-            @RequestParam(defaultValue = "20") int pageSize) {
-        return R.ok(imageRecordService.listByUser(pageNum, pageSize));
+            @RequestParam(defaultValue = "20") int pageSize,
+            @RequestParam(required = false) String keyword) {
+        return R.ok(imageRecordService.listByUser(pageNum, pageSize, keyword));
     }
 
     @DeleteMapping("/{id}")

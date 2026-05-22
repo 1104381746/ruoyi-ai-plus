@@ -24,8 +24,9 @@ public class VideoController {
     @GetMapping("/list")
     public R<Page<VideoRecordVo>> list(
             @RequestParam(defaultValue = "1") int pageNum,
-            @RequestParam(defaultValue = "20") int pageSize) {
-        return R.ok(videoRecordService.listByUser(pageNum, pageSize));
+            @RequestParam(defaultValue = "20") int pageSize,
+            @RequestParam(required = false) String keyword) {
+        return R.ok(videoRecordService.listByUser(pageNum, pageSize, keyword));
     }
 
     @DeleteMapping("/{id}")

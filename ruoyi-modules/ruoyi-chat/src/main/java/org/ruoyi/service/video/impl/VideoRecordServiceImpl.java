@@ -96,12 +96,13 @@ public class VideoRecordServiceImpl implements IVideoRecordService {
     }
 
     @Override
-    public Page<VideoRecordVo> listByUser(int pageNum, int pageSize) {
+    public Page<VideoRecordVo> listByUser(int pageNum, int pageSize, String keyword) {
         long userId = LoginHelper.getUserId();
         Page<VideoRecord> page = videoRecordMapper.selectPage(
                 new Page<>(pageNum, pageSize),
                 new LambdaQueryWrapper<VideoRecord>()
                         .eq(VideoRecord::getUserId, userId)
+                        .like(keyword != null && !keyword.isBlank(), VideoRecord::getPrompt, keyword)
                         .orderByAsc(VideoRecord::getCreateTime));
         Page<VideoRecordVo> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
         voPage.setRecords(page.getRecords().stream()

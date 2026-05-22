@@ -111,12 +111,13 @@ public class ImageRecordServiceImpl implements IImageRecordService {
 
 
     @Override
-    public Page<ImageRecordVo> listByUser(int pageNum, int pageSize) {
+    public Page<ImageRecordVo> listByUser(int pageNum, int pageSize, String keyword) {
         long userId = LoginHelper.getUserId();
         Page<ImageRecord> page = imageRecordMapper.selectPage(
                 new Page<>(pageNum, pageSize),
                 new LambdaQueryWrapper<ImageRecord>()
                         .eq(ImageRecord::getUserId, userId)
+                        .like(keyword != null && !keyword.isBlank(), ImageRecord::getPrompt, keyword)
                         .orderByAsc(ImageRecord::getCreateTime));
         Page<ImageRecordVo> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
         voPage.setRecords(page.getRecords().stream()
