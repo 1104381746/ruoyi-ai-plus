@@ -9,8 +9,10 @@ import org.ruoyi.common.tenant.core.TenantEntity;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("image_record")
-public class ImageRecord extends TenantEntity {
+@TableName("video_record")
+public class VideoRecord extends TenantEntity {
+    private Long createDept;
+
     @TableId(type = IdType.AUTO)
     private Long id;
     private Long userId;
@@ -18,7 +20,8 @@ public class ImageRecord extends TenantEntity {
     private String sessionId;
     private String prompt;
     private String size;
+    private Integer duration;
     private Integer seed;
-    private String imageUrl;
+    private String videoUrl;
     private Integer status; // 0生成中 1完成 2失败
 }

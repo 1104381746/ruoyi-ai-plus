@@ -141,6 +141,11 @@
 
         <dependency>
             <groupId>org.ruoyi</groupId>
+            <artifactId>ruoyi-common-oss</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.ruoyi</groupId>
             <artifactId>ruoyi-common-doc</artifactId>
         </dependency>
 
@@ -153,6 +158,12 @@
             <groupId>io.github.imfangs</groupId>
             <artifactId>dify-java-client</artifactId>
             <version>${dify.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.volcengine</groupId>
+            <artifactId>volc-sdk-java</artifactId>
+            <version>${volc-sdk-java.version}</version>
         </dependency>
 
         <!-- HikariCP 数据库连接池 -->

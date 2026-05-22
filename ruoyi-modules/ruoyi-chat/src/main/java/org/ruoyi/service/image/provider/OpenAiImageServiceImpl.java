@@ -52,9 +52,12 @@ public class OpenAiImageServiceImpl extends AbstractImageGenerationService {
             }
 
             return "";
+        } catch (RuntimeException e) {
+            log.error("OpenAI 兼容文生图接口调用失败", e);
+            throw e;
         } catch (Exception e) {
             log.error("OpenAI 兼容文生图接口调用失败", e);
-            return "";
+            throw new RuntimeException(e);
         }
     }
 
