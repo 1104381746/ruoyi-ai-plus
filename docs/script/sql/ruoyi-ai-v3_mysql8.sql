@@ -3503,4 +3503,26 @@ CREATE TABLE `image_record` (
                                 KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='AI生图记录';
 
+-- AI视频记录表
+CREATE TABLE `video_record` (
+                                `id` bigint NOT NULL AUTO_INCREMENT,
+                                `user_id` bigint DEFAULT NULL,
+                                `model_id` bigint DEFAULT NULL,
+                                `session_id` varchar(64) DEFAULT NULL,
+                                `prompt` text,
+                                `size` varchar(32) DEFAULT NULL,
+                                `duration` int DEFAULT NULL,
+                                `seed` int DEFAULT NULL,
+                                `video_url` varchar(512) DEFAULT NULL,
+                                `status` int DEFAULT '0' COMMENT '0生成中 1完成 2失败',
+                                `tenant_id` bigint DEFAULT NULL,
+                                `create_by` bigint DEFAULT NULL,
+                                `create_time` datetime DEFAULT NULL,
+                                `update_by` bigint DEFAULT NULL,
+                                `update_time` datetime DEFAULT NULL,
+                                `del_flag` int DEFAULT '0',
+                                `create_dept` bigint DEFAULT NULL,
+                                PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='AI生图记录';
+
 SET FOREIGN_KEY_CHECKS = 1;
