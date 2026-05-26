@@ -3483,46 +3483,59 @@ INSERT INTO `test_tree` VALUES (11, '000000', 7, 108, 3, '子节点77', 0, 103, 
 INSERT INTO `test_tree` VALUES (12, '000000', 10, 108, 3, '子节点88', 0, 103, '2026-02-03 05:14:54', 1, NULL, NULL, 0);
 INSERT INTO `test_tree` VALUES (13, '000000', 10, 108, 3, '子节点99', 0, 103, '2026-02-03 05:14:54', 1, NULL, NULL, 0);
 
+-- ----------------------------
 -- AI生图记录表
+-- ----------------------------
+DROP TABLE IF EXISTS `image_record`;
 CREATE TABLE `image_record` (
                                 `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
                                 `user_id` bigint NOT NULL COMMENT '用户ID',
-                                `model_id` bigint NOT NULL COMMENT '模型ID',
+                                `model_name` varchar(255) DEFAULT NULL COMMENT '模型名称',
                                 `session_id` varchar(64) DEFAULT NULL COMMENT '会话ID',
-                                `prompt` text NOT NULL COMMENT '提示词',
+                                `content` mediumtext COMMENT '消息内容',
+                                `role` varchar(255) DEFAULT 'user' COMMENT '对话角色',
+                                `total_tokens` int DEFAULT 0 COMMENT '累计 Tokens',
                                 `size` varchar(20) DEFAULT NULL COMMENT '图片尺寸',
                                 `seed` int DEFAULT NULL COMMENT '随机种子',
-                                `image_url` varchar(500) NOT NULL COMMENT '图片URL',
+                                `image_url` varchar(500) DEFAULT NULL COMMENT '图片URL',
+                                `reference_image_url` varchar(500) DEFAULT NULL COMMENT '参考图片URL',
+                                `status` int DEFAULT 0 COMMENT '0生成中 1完成 2失败 3已取消',
                                 `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-                                `tenant_id` varchar(20) DEFAULT '000000' COMMENT '租户编号',
+                                `tenant_id` bigint DEFAULT 0 COMMENT '租户Id',
                                 `create_dept` bigint DEFAULT NULL COMMENT '创建部门',
                                 `create_by` bigint DEFAULT NULL COMMENT '创建者',
                                 `update_by` bigint DEFAULT NULL COMMENT '更新者',
                                 `update_time` datetime DEFAULT NULL COMMENT '更新时间',
                                 PRIMARY KEY (`id`),
                                 KEY `idx_user_id` (`user_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='AI生图记录';
-
--- AI视频记录表
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='AI生图记录';
+-- ----------------------------
+-- AI视频生成记录表
+-- ----------------------------
+DROP TABLE IF EXISTS `video_record`;
 CREATE TABLE `video_record` (
-                                `id` bigint NOT NULL AUTO_INCREMENT,
-                                `user_id` bigint DEFAULT NULL,
-                                `model_id` bigint DEFAULT NULL,
-                                `session_id` varchar(64) DEFAULT NULL,
-                                `prompt` text,
-                                `size` varchar(32) DEFAULT NULL,
-                                `duration` int DEFAULT NULL,
-                                `seed` int DEFAULT NULL,
-                                `video_url` varchar(512) DEFAULT NULL,
-                                `status` int DEFAULT '0' COMMENT '0生成中 1完成 2失败',
-                                `tenant_id` bigint DEFAULT NULL,
-                                `create_by` bigint DEFAULT NULL,
-                                `create_time` datetime DEFAULT NULL,
-                                `update_by` bigint DEFAULT NULL,
-                                `update_time` datetime DEFAULT NULL,
-                                `del_flag` int DEFAULT '0',
-                                `create_dept` bigint DEFAULT NULL,
-                                PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='AI生图记录';
+                                `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+                                `user_id` bigint NOT NULL COMMENT '用户ID',
+                                `model_name` varchar(255) DEFAULT NULL COMMENT '模型名称',
+                                `session_id` varchar(64) DEFAULT NULL COMMENT '会话ID',
+                                `content` mediumtext COMMENT '消息内容',
+                                `role` varchar(255) DEFAULT 'user' COMMENT '对话角色',
+                                `total_tokens` int DEFAULT 0 COMMENT '累计 Tokens',
+                                `size` varchar(32) DEFAULT NULL COMMENT '视频尺寸',
+                                `duration` int DEFAULT NULL COMMENT '视频时长(秒)',
+                                `seed` int DEFAULT NULL COMMENT '随机种子',
+                                `video_url` varchar(512) DEFAULT NULL COMMENT '视频URL',
+                                `reference_image_url` varchar(500) DEFAULT NULL COMMENT '参考图片URL',
+                                `status` int DEFAULT 0 COMMENT '0生成中 1完成 2失败 3已取消',
+                                `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                                `tenant_id` bigint DEFAULT 0 COMMENT '租户Id',
+                                `create_dept` bigint DEFAULT NULL COMMENT '创建部门',
+                                `create_by` bigint DEFAULT NULL COMMENT '创建者',
+                                `update_by` bigint DEFAULT NULL COMMENT '更新者',
+                                `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+                                `del_flag` int DEFAULT 0 COMMENT '删除标志',
+                                PRIMARY KEY (`id`),
+                                KEY `idx_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='AI视频生成记录';
 
 SET FOREIGN_KEY_CHECKS = 1;

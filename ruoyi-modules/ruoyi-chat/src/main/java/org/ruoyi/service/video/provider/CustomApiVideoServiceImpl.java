@@ -1,7 +1,10 @@
 package org.ruoyi.service.video.provider;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ruoyi.common.chat.domain.vo.chat.ChatModelVo;
+import org.ruoyi.service.GenerationCancelManager;
+import org.ruoyi.service.GenerationCancelledException;
 import org.ruoyi.service.video.AbstractVideoGenerationService;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -13,25 +16,28 @@ import java.util.Map;
 
 @Service
 @Slf4j
-public class NewApiVideoServiceImpl extends AbstractVideoGenerationService {
+@RequiredArgsConstructor
+public class CustomApiVideoServiceImpl extends AbstractVideoGenerationService {
 
     private final RestClient restClient = RestClient.create();
+    private final GenerationCancelManager cancelManager;
     private static final int POLL_INTERVAL_MS = 5000;
-    private static final int POLL_MAX_ATTEMPTS = 120; // 最多等 10 分钟
+    private static final int POLL_MAX_ATTEMPTS = 120;
 
     @Override
-    protected String doGenerateVideo(ChatModelVo modelVo, String prompt, String size, Integer duration, Integer seed) {
+    protected String doGenerateVideo(ChatModelVo modelVo, String prompt, String size, Integer duration, Integer seed, String referenceImageUrl) {
         var body = new LinkedHashMap<String, Object>();
         body.put("model", modelVo.getModelName());
         body.put("prompt", prompt);
         if (size != null) body.put("size", size);
         if (duration != null) body.put("duration", duration);
         if (seed != null) body.put("seed", seed);
+        if (referenceImageUrl != null) body.put("image_url", referenceImageUrl);
 
         try {
             log.info("调用文生视频接口: {}, model: {}", modelVo.getApiHost(), modelVo.getModelName());
             var response = restClient.post()
-                .uri(modelVo.getApiHost() + "/v1/videos/generations")
+                .uri(modelVo.getApiHost() + "/v1/videos")
                 .header("Authorization", "Bearer " + modelVo.getApiKey())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(body)
@@ -40,12 +46,10 @@ public class NewApiVideoServiceImpl extends AbstractVideoGenerationService {
 
             if (response == null) return "";
 
-            // 同步响应
             if (response.get("data") instanceof List<?> dataList && !dataList.isEmpty()) {
                 return extractUrl((Map<String, Object>) dataList.get(0));
             }
 
-            // 异步响应：轮询 task_id
             String taskId = (String) response.get("task_id");
             if (taskId == null) taskId = (String) response.get("id");
             if (taskId != null) {
@@ -61,8 +65,12 @@ public class NewApiVideoServiceImpl extends AbstractVideoGenerationService {
     }
 
     private String pollTask(ChatModelVo modelVo, String taskId) throws InterruptedException {
-        String taskUrl = modelVo.getApiHost() + "/v1/videos/tasks/" + taskId;
+        String taskUrl = modelVo.getApiHost() + "/v1/videos/" + taskId;
         for (int i = 0; i < POLL_MAX_ATTEMPTS; i++) {
+            if (cancelManager.isCancelled()) {
+                log.info("视频任务 {} 被用户取消", taskId);
+                throw new GenerationCancelledException();
+            }
             Thread.sleep(POLL_INTERVAL_MS);
             var result = restClient.get()
                 .uri(taskUrl)
@@ -72,7 +80,7 @@ public class NewApiVideoServiceImpl extends AbstractVideoGenerationService {
             if (result == null) continue;
             String status = (String) result.get("status");
             log.info("轮询视频任务 {} 状态: {}", taskId, status);
-            if ("success".equals(status) || "complete".equals(status) || "succeeded".equals(status)) {
+            if ("success".equals(status) || "completed".equals(status) || "complete".equals(status) || "succeeded".equals(status)) {
                 if (result.get("data") instanceof List<?> dataList && !dataList.isEmpty()) {
                     return extractUrl((Map<String, Object>) dataList.get(0));
                 }

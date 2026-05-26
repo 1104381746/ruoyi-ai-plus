@@ -72,11 +72,12 @@ public class ChatSessionServiceImpl implements IChatSessionService {
     private LambdaQueryWrapper<ChatSession> buildQueryWrapper(ChatSessionBo bo) {
         Map<String, Object> params = bo.getParams();
         LambdaQueryWrapper<ChatSession> lqw = Wrappers.lambdaQuery();
-        lqw.orderByAsc(ChatSession::getId);
+        lqw.orderByDesc(ChatSession::getCreateTime);
         lqw.eq(bo.getUserId() != null, ChatSession::getUserId, bo.getUserId());
         lqw.like(StringUtils.isNotBlank(bo.getSessionTitle()), ChatSession::getSessionTitle, bo.getSessionTitle());
         lqw.eq(StringUtils.isNotBlank(bo.getSessionContent()), ChatSession::getSessionContent, bo.getSessionContent());
         lqw.eq(StringUtils.isNotBlank(bo.getConversationId()), ChatSession::getConversationId, bo.getConversationId());
+        lqw.eq(StringUtils.isNotBlank(bo.getType()), ChatSession::getType, bo.getType());
         return lqw;
     }
 

@@ -10,12 +10,15 @@ import java.time.LocalDateTime;
 public class ImageRecordVo {
     private Long id;
     private Long userId;
-    private Long modelId;
+    private String modelName;
     private String sessionId;
-    private String prompt;
+    private String content;
+    private String role;
+    private Integer totalTokens;
     private String size;
     private Integer seed;
     private String imageUrl;
+    private String referenceImageUrl;
     private Integer status;
     private LocalDateTime createTime;
 }

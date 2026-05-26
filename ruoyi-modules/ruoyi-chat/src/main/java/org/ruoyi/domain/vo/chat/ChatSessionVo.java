@@ -8,6 +8,7 @@ import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Date;
 
 
 /**
@@ -60,5 +61,19 @@ public class ChatSessionVo implements Serializable {
     @ExcelProperty(value = "会话ID")
     private String conversationId;
 
+    /**
+     * 创建时间
+     */
+    private Date createTime;
+
+    /**
+     * 更新时间
+     */
+    private Date updateTime;
+
+    /**
+     * 会话类型: chat/image/video
+     */
+    private String type;
 
 }

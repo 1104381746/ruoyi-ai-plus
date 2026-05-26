@@ -13,9 +13,10 @@ public abstract class AbstractVideoGenerationService implements IVideoGeneration
             context.getPrompt(),
             context.getSize(),
             context.getDuration(),
-            context.getSeed()
+            context.getSeed(),
+            context.getReferenceImageUrl()
         );
     }
 
-    protected abstract String doGenerateVideo(ChatModelVo modelVo, String prompt, String size, Integer duration, Integer seed);
+    protected abstract String doGenerateVideo(ChatModelVo modelVo, String prompt, String size, Integer duration, Integer seed, String referenceImageUrl);
 }

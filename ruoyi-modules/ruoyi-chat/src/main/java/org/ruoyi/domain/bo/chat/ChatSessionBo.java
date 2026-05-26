@@ -50,5 +50,9 @@ public class ChatSessionBo extends BaseEntity {
      */
     private String conversationId;
 
+    /**
+     * 会话类型: chat/image/video
+     */
+    private String type;
 
 }

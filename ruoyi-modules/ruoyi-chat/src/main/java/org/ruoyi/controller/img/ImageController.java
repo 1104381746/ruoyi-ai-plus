@@ -25,8 +25,15 @@ public class ImageController {
     public R<Page<ImageRecordVo>> list(
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "20") int pageSize,
-            @RequestParam(required = false) String keyword) {
-        return R.ok(imageRecordService.listByUser(pageNum, pageSize, keyword));
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String sessionId) {
+        return R.ok(imageRecordService.listByUser(pageNum, pageSize, keyword, sessionId));
+    }
+
+    @PostMapping("/cancel/{sessionId}")
+    public R<Void> cancel(@PathVariable String sessionId) {
+        imageRecordService.cancel(sessionId);
+        return R.ok();
     }
 
     @DeleteMapping("/{id}")

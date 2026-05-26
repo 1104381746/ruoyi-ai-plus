@@ -16,12 +16,16 @@ public class VideoRecord extends TenantEntity {
     @TableId(type = IdType.AUTO)
     private Long id;
     private Long userId;
-    private Long modelId;
+    private String modelName;
     private String sessionId;
-    private String prompt;
+    private String content;
+    private String role;
+    private Integer totalTokens;
     private String size;
     private Integer duration;
     private Integer seed;
     private String videoUrl;
+    private String referenceImageUrl;
     private Integer status; // 0生成中 1完成 2失败
+    private Integer delFlag;
 }

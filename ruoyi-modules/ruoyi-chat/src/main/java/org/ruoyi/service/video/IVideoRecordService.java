@@ -6,6 +6,7 @@ import org.ruoyi.domain.vo.VideoRecordVo;
 
 public interface IVideoRecordService {
     VideoRecordVo generate(VideoRecordBo bo);
-    Page<VideoRecordVo> listByUser(int pageNum, int pageSize, String keyword);
+    Page<VideoRecordVo> listByUser(int pageNum, int pageSize, String keyword, String sessionId);
     void deleteById(Long id);
+    void cancel(String sessionId);
 }

@@ -33,7 +33,7 @@ import org.ruoyi.common.mybatis.core.page.TableDataInfo;
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/system/session")
-public class ChatSessionController extends BaseController {
+public class    ChatSessionController extends BaseController {
 
     private final IChatSessionService chatSessionService;
 

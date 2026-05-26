@@ -11,9 +11,13 @@ import org.ruoyi.common.chat.service.chat.IChatModelService;
 import org.ruoyi.common.oss.factory.OssFactory;
 import org.ruoyi.common.satoken.utils.LoginHelper;
 import org.ruoyi.domain.bo.ImageRecordBo;
+import org.ruoyi.domain.bo.chat.ChatSessionBo;
 import org.ruoyi.domain.entity.ImageRecord;
 import org.ruoyi.domain.vo.ImageRecordVo;
 import org.ruoyi.mapper.img.ImageRecordMapper;
+import org.ruoyi.service.GenerationCancelManager;
+import org.ruoyi.service.GenerationCancelledException;
+import org.ruoyi.service.chat.IChatSessionService;
 import org.ruoyi.service.img.IImageRecordService;
 import org.ruoyi.enums.ImageModeType;
 import org.ruoyi.service.image.AbstractImageGenerationService;
@@ -35,17 +39,33 @@ public class ImageRecordServiceImpl implements IImageRecordService {
 
     private final ImageRecordMapper imageRecordMapper;
     private final IChatModelService chatModelService;
+    private final IChatSessionService chatSessionService;
     private final ApplicationContext applicationContext;
     private final Converter converter;
+    private final GenerationCancelManager cancelManager;
 
     @Override
     public ImageRecordVo generate(ImageRecordBo bo) {
-        ChatModelVo modelVo = chatModelService.queryById(bo.getModelId());
+        ChatModelVo modelVo = chatModelService.selectModelByName(bo.getModelName());
+        if (modelVo == null) throw new RuntimeException("模型不存在: " + bo.getModelName());
+
+        // 新会话：创建 chat_session 记录
+        if (bo.getSessionId() == null || bo.getSessionId().isBlank()) {
+            ChatSessionBo sessionBo = new ChatSessionBo();
+            sessionBo.setUserId(LoginHelper.getUserId());
+            sessionBo.setSessionTitle(bo.getContent().length() > 50 ? bo.getContent().substring(0, 50) : bo.getContent());
+            sessionBo.setSessionContent(bo.getContent());
+            sessionBo.setType("image");
+            chatSessionService.insertByBo(sessionBo);
+            bo.setSessionId(String.valueOf(sessionBo.getId()));
+        }
+
         var context = ImageContext.builder()
                 .chatModelVo(modelVo)
-                .prompt(bo.getPrompt())
+                .prompt(bo.getContent())
                 .size(bo.getSize())
                 .seed(bo.getSeed())
+                .referenceImageUrl(bo.getReferenceImageUrl())
                 .build();
 
         var providers = applicationContext.getBeansOfType(AbstractImageGenerationService.class).values();
@@ -58,26 +78,47 @@ public class ImageRecordServiceImpl implements IImageRecordService {
                         .orElseThrow(() -> new RuntimeException("No image provider for: " + modelVo.getProviderCode())));
         var record = new ImageRecord();
         record.setUserId(LoginHelper.getUserId());
-        record.setModelId(bo.getModelId());
+        record.setModelName(modelVo.getModelName());
         record.setSessionId(bo.getSessionId());
-        record.setPrompt(bo.getPrompt());
+        record.setContent(bo.getContent());
+        record.setRole("user");
+        record.setTotalTokens(0);
         record.setSize(bo.getSize());
         record.setSeed(bo.getSeed());
+        record.setReferenceImageUrl(bo.getReferenceImageUrl());
 
         String imageUrl;
+        cancelManager.setCurrent(bo.getSessionId());
         try {
             imageUrl = provider.generateImage(context);
+            if (cancelManager.isCancelled()) {
+                record.setStatus(3);
+                imageRecordMapper.insert(record);
+                return converter.convert(record, ImageRecordVo.class);
+            }
             imageUrl = uploadToOss(imageUrl);
             record.setImageUrl(imageUrl);
             record.setStatus(1);
+        } catch (GenerationCancelledException e) {
+            record.setStatus(3);
+            imageRecordMapper.insert(record);
+            return converter.convert(record, ImageRecordVo.class);
         } catch (Exception e) {
             record.setStatus(2);
             imageRecordMapper.insert(record);
             throw e instanceof RuntimeException re ? re : new RuntimeException(e);
+        } finally {
+            cancelManager.clearCurrent();
+            cancelManager.clear(bo.getSessionId());
         }
         imageRecordMapper.insert(record);
 
         return converter.convert(record, ImageRecordVo.class);
+    }
+
+    @Override
+    public void cancel(String sessionId) {
+        cancelManager.cancel(sessionId);
     }
 
     private String uploadToOss(String url) {
@@ -111,14 +152,15 @@ public class ImageRecordServiceImpl implements IImageRecordService {
 
 
     @Override
-    public Page<ImageRecordVo> listByUser(int pageNum, int pageSize, String keyword) {
+    public Page<ImageRecordVo> listByUser(int pageNum, int pageSize, String keyword, String sessionId) {
         long userId = LoginHelper.getUserId();
         Page<ImageRecord> page = imageRecordMapper.selectPage(
                 new Page<>(pageNum, pageSize),
                 new LambdaQueryWrapper<ImageRecord>()
                         .eq(ImageRecord::getUserId, userId)
-                        .like(keyword != null && !keyword.isBlank(), ImageRecord::getPrompt, keyword)
-                        .orderByAsc(ImageRecord::getCreateTime));
+                        .like(keyword != null && !keyword.isBlank(), ImageRecord::getContent, keyword)
+                        .eq(sessionId != null && !sessionId.isBlank(), ImageRecord::getSessionId, sessionId)
+                        .orderByDesc(ImageRecord::getCreateTime));
         Page<ImageRecordVo> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
         voPage.setRecords(page.getRecords().stream()
                 .map(r -> converter.convert(r, ImageRecordVo.class))

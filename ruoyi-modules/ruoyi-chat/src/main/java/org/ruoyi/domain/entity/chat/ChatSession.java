@@ -52,4 +52,9 @@ public class ChatSession extends BaseEntity {
      */
     private String remark;
 
+    /**
+     * 会话类型: chat/image/video
+     */
+    private String type;
+
 }

@@ -15,4 +15,6 @@ public class VideoContext {
     private String size;
     private Integer duration;
     private Integer seed;
+    /** 参考图URL（图生视频时使用，可选） */
+    private String referenceImageUrl;
 }
