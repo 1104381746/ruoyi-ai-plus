@@ -58,17 +58,11 @@ ruoyi-ai/
 │   ├── ruoyi-common-chat/     # AI chat shared models
 │   ├── ruoyi-common-doc/      # Document parsing (PDF/Word/Excel)
 │   ├── ruoyi-common-oss/      # Object storage (AWS S3 SDK)
-│   ├── ruoyi-common-job/      # SnailJob distributed task scheduling
 │   └── ruoyi-common-bom/      # Bill of Materials POM
 ├── ruoyi-modules/             # Business modules
 │   ├── ruoyi-system/          # System management (users, roles, menus, tenants, depts, configs)
 │   ├── ruoyi-chat/            # AI chat: sessions, messages, models, multi-agent
-│   ├── ruoyi-aiflow/          # AI workflow orchestration engine
-│   ├── ruoyi-workflow/        # Business workflow (warm-flow engine)
-│   └── ruoyi-generator/       # Code generator (Velocity templates)
-└── ruoyi-extend/              # Extended services
-    ├── ruoyi-monitor-admin/   # Spring Boot Admin monitoring
-    └── ruoyi-snailjob-server/ # SnailJob server for distributed task scheduling
+│   └── ruoyi-aiflow/          # AI workflow orchestration engine
 ```
 
 ### Key Patterns
@@ -96,10 +90,8 @@ ruoyi-ai/
 | Auth | Sa-Token 1.44.0 + JWT |
 | AI | Langchain4j 1.13.0 + LangGraph4j 1.5.3 |
 | Vector DB | Milvus / Weaviate / Qdrant (configurable) |
-| Workflow | warm-flow 1.8.2 |
 | Object Storage | MinIO (AWS S3 SDK 2.x) |
 | API Docs | springdoc-openapi 2.8.13 + Knife4j |
-| Job Scheduling | SnailJob 1.8.0 |
 | Bean Mapping | mapstruct-plus 1.5.0 + Lombok |
 | Utilities | Hutool 5.8.40 |
 

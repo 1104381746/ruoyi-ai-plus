@@ -123,8 +123,6 @@ security:
     - /error
     - /*/api-docs
     - /*/api-docs/**
-    - /warm-flow-ui/config
-    - /workflow/run
 # 多租户配置
 tenant:
   # 是否开启
@@ -140,7 +138,6 @@ tenant:
     - sys_user_role
     - sys_client
     - sys_oss_config
-    - flow_spel
 
 # MyBatisPlus配置
 # https://baomidou.com/config/
@@ -206,17 +203,9 @@ springdoc:
 
   #这里定义了两个分组，可定义多个，也可以不定义
   group-configs:
-    - group: 1.演示模块
-      packages-to-scan: org.ruoyi.demo
-    - group: 2.通用模块
-      packages-to-scan: org.ruoyi.web
-    - group: 3.系统模块
+    - group: 1.系统模块
       packages-to-scan: org.ruoyi.system
-    - group: 4.代码生成模块
-      packages-to-scan: org.ruoyi.generator
-    - group: 5.工作流模块
-      packages-to-scan: org.ruoyi.workflow
-    - group: 6.MCP模块
+    - group: 4.MCP模块
       packages-to-scan: org.ruoyi.mcp
 
 # 防止XSS攻击
@@ -279,19 +268,6 @@ demo:
     - /system/attach/**
     - /system/fragment/**
     - /system/info/**
---- # warm-flow工作流配置
-warm-flow:
-  # 是否开启工作流，默认true
-  enabled: true
-  # 是否开启设计器ui
-  ui: true
-  # 是否显示流程图顶部文字
-  top-text-show: true
-  # 是否渲染节点悬浮提示，默认true
-  node-tooltip: true
-  # 默认Authorization，如果有多个token，用逗号分隔
-  token-name: ${sa-token.token-name},clientid
-
 # 向量库配置
 vector-store:
   # 向量存储类型 可选(weaviate/milvus/qdrant)

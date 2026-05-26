@@ -12,15 +12,11 @@ import org.ruoyi.common.log.enums.BusinessType;
 import org.ruoyi.common.mybatis.core.page.PageQuery;
 import org.ruoyi.common.mybatis.core.page.TableDataInfo;
 import org.ruoyi.common.web.core.BaseController;
-import org.ruoyi.system.domain.SysUserRole;
 import org.ruoyi.system.domain.bo.SysDeptBo;
 import org.ruoyi.system.domain.bo.SysRoleBo;
-import org.ruoyi.system.domain.bo.SysUserBo;
 import org.ruoyi.system.domain.vo.SysRoleVo;
-import org.ruoyi.system.domain.vo.SysUserVo;
 import org.ruoyi.system.service.ISysDeptService;
 import org.ruoyi.system.service.ISysRoleService;
-import org.ruoyi.system.service.ISysUserService;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,7 +34,6 @@ import java.util.List;
 public class SysRoleController extends BaseController {
 
     private final ISysRoleService roleService;
-    private final ISysUserService userService;
     private final ISysDeptService deptService;
 
     /**
@@ -161,64 +156,6 @@ public class SysRoleController extends BaseController {
     @GetMapping("/optionselect")
     public R<List<SysRoleVo>> optionselect(@RequestParam(required = false) Long[] roleIds) {
         return R.ok(roleService.selectRoleByIds(roleIds == null ? null : List.of(roleIds)));
-    }
-
-    /**
-     * 查询已分配用户角色列表
-     */
-    @SaCheckPermission("system:role:list")
-    @GetMapping("/authUser/allocatedList")
-    public TableDataInfo<SysUserVo> allocatedList(SysUserBo user, PageQuery pageQuery) {
-        return userService.selectAllocatedList(user, pageQuery);
-    }
-
-    /**
-     * 查询未分配用户角色列表
-     */
-    @SaCheckPermission("system:role:list")
-    @GetMapping("/authUser/unallocatedList")
-    public TableDataInfo<SysUserVo> unallocatedList(SysUserBo user, PageQuery pageQuery) {
-        return userService.selectUnallocatedList(user, pageQuery);
-    }
-
-    /**
-     * 取消授权用户
-     */
-    @SaCheckPermission("system:role:edit")
-    @Log(title = "角色管理", businessType = BusinessType.GRANT)
-    @RepeatSubmit()
-    @PutMapping("/authUser/cancel")
-    public R<Void> cancelAuthUser(@RequestBody SysUserRole userRole) {
-        return toAjax(roleService.deleteAuthUser(userRole));
-    }
-
-    /**
-     * 批量取消授权用户
-     *
-     * @param roleId  角色ID
-     * @param userIds 用户ID串
-     */
-    @SaCheckPermission("system:role:edit")
-    @Log(title = "角色管理", businessType = BusinessType.GRANT)
-    @RepeatSubmit()
-    @PutMapping("/authUser/cancelAll")
-    public R<Void> cancelAuthUserAll(Long roleId, Long[] userIds) {
-        return toAjax(roleService.deleteAuthUsers(roleId, userIds));
-    }
-
-    /**
-     * 批量选择用户授权
-     *
-     * @param roleId  角色ID
-     * @param userIds 用户ID串
-     */
-    @SaCheckPermission("system:role:edit")
-    @Log(title = "角色管理", businessType = BusinessType.GRANT)
-    @RepeatSubmit()
-    @PutMapping("/authUser/selectAll")
-    public R<Void> selectAuthUserAll(Long roleId, Long[] userIds) {
-        roleService.checkRoleDataScope(roleId);
-        return toAjax(roleService.insertAuthUsers(roleId, userIds));
     }
 
     /**

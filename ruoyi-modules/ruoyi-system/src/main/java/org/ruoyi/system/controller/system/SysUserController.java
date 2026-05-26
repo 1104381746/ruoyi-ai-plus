@@ -255,39 +255,6 @@ public class SysUserController extends BaseController {
     }
 
     /**
-     * 根据用户编号获取授权角色
-     *
-     * @param userId 用户ID
-     */
-    @SaCheckPermission("system:user:query")
-    @GetMapping("/authRole/{userId}")
-    public R<SysUserInfoVo> authRole(@PathVariable Long userId) {
-        userService.checkUserDataScope(userId);
-        SysUserVo user = userService.selectUserById(userId);
-        List<SysRoleVo> roles = roleService.selectRolesAuthByUserId(userId);
-        SysUserInfoVo userInfoVo = new SysUserInfoVo();
-        userInfoVo.setUser(user);
-        userInfoVo.setRoles(LoginHelper.isSuperAdmin(userId) ? roles : StreamUtils.filter(roles, r -> !r.isSuperAdmin()));
-        return R.ok(userInfoVo);
-    }
-
-    /**
-     * 用户授权角色
-     *
-     * @param userId  用户Id
-     * @param roleIds 角色ID串
-     */
-    @SaCheckPermission("system:user:edit")
-    @Log(title = "用户管理", businessType = BusinessType.GRANT)
-    @RepeatSubmit()
-    @PutMapping("/authRole")
-    public R<Void> insertAuthRole(Long userId, Long[] roleIds) {
-        userService.checkUserDataScope(userId);
-        userService.insertUserAuth(userId, roleIds);
-        return R.ok();
-    }
-
-    /**
      * 获取部门树列表
      */
     @SaCheckPermission("system:user:list")
