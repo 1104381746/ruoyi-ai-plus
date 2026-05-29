@@ -27,7 +27,9 @@ public abstract class AbstractImageGenerationService implements IImageGeneration
         Integer seed = imageContext.getSeed();
         // 获取参考图URL
         String referenceImageUrl = imageContext.getReferenceImageUrl();
-        return doGenerateImage(chatModelVo, prompt, size, seed, referenceImageUrl);
+        // 获取会话ID
+        String sessionId = imageContext.getSessionId();
+        return doGenerateImage(chatModelVo, prompt, size, seed, referenceImageUrl, sessionId);
     }
 
     /**
@@ -35,11 +37,5 @@ public abstract class AbstractImageGenerationService implements IImageGeneration
      *
      * @param prompt 提示词
      */
-    protected abstract String doGenerateImage(ChatModelVo chatModelVo, String prompt, String size, Integer seed, String referenceImageUrl);
-
-    /**
-     * 构建具体厂商的 ImageModel（原生SDK 非langchain4j-dashscope版）
-     * 子类必须实现此方法，返回对应厂商的模型实例
-     */
-    protected abstract Object buildImageModel(ChatModelVo chatModelVo);
+    protected abstract String doGenerateImage(ChatModelVo chatModelVo, String prompt, String size, Integer seed, String referenceImageUrl, String sessionId);
 }

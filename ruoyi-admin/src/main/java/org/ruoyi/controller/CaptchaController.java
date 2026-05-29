@@ -15,6 +15,7 @@ import org.ruoyi.common.core.exception.ServiceException;
 import org.ruoyi.common.core.utils.SpringUtils;
 import org.ruoyi.common.core.utils.StringUtils;
 import org.ruoyi.common.core.utils.reflect.ReflectUtils;
+import org.ruoyi.common.json.utils.JsonUtils;
 import org.ruoyi.common.mail.config.properties.MailProperties;
 import org.ruoyi.common.mail.utils.MailUtils;
 import org.ruoyi.common.ratelimiter.annotation.RateLimiter;
@@ -31,10 +32,13 @@ import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Duration;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * 验证码操作处理
@@ -80,8 +84,16 @@ public class CaptchaController {
      *
      * @param email 邮箱
      */
-    @GetMapping("/resource/email/code")
-    public R<Void> emailCode(@NotBlank(message = "{user.email.not.blank}") String email) {
+    @PostMapping("/resource/email/code")
+    public R<Void> emailCode(@RequestBody String body) {
+        Map<?, ?> map = JsonUtils.parseMap(body);
+        String email = (String) map.get("email");
+        if (StringUtils.isBlank(email)) {
+            email = (String) map.get("username");
+        }
+        if (StringUtils.isBlank(email)) {
+            throw new ServiceException("邮箱不能为空");
+        }
         if (!mailProperties.getEnabled()) {
             return R.fail("当前系统没有开启邮箱功能！");
         }

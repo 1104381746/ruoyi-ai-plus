@@ -192,6 +192,17 @@ public class AuthController {
     }
 
     /**
+     * 查询注册功能是否开启
+     *
+     * @param tenantId 租户ID
+     * @return 是否开启
+     */
+    @GetMapping("/register/enabled")
+    public R<Boolean> registerEnabled(@RequestParam String tenantId) {
+        return R.ok(configService.selectRegisterEnabled(tenantId));
+    }
+
+    /**
      * 登录页面租户下拉框
      *
      * @return 租户列表
@@ -199,19 +210,30 @@ public class AuthController {
     @RateLimiter(time = 60, count = 20, limitType = LimitType.IP)
     @GetMapping("/tenant/list")
     public R<LoginTenantVo> tenantList(HttpServletRequest request) throws Exception {
-        // 返回对象
         LoginTenantVo result = new LoginTenantVo();
-        boolean enable = TenantHelper.isEnable();
-        result.setTenantEnabled(enable);
-        // 如果未开启租户这直接返回
-        if (!enable) {
+        boolean multiTenancy = configService.selectMultiTenancyEnabled();
+        result.setTenantEnabled(multiTenancy);
+        result.setMultiTenancy(multiTenancy);
+        String defaultTenantId = TenantHelper.ignore(() -> tenantService.getDefaultTenantId());
+        result.setDefaultTenantId(defaultTenantId);
+
+        // 多租户关闭时，只返回默认租户
+        if (!multiTenancy) {
+            SysTenantVo defaultTenant = TenantHelper.ignore(() -> tenantService.queryByTenantId(defaultTenantId));
+            if (ObjectUtil.isNotNull(defaultTenant)) {
+                TenantListVo vo = new TenantListVo();
+                vo.setTenantId(defaultTenant.getTenantId());
+                vo.setCompanyName(defaultTenant.getCompanyName());
+                vo.setDomain(defaultTenant.getDomain());
+                result.setVoList(List.of(vo));
+            }
             return R.ok(result);
         }
 
         List<SysTenantVo> tenantList = tenantService.queryList(new SysTenantBo());
         List<TenantListVo> voList = MapstructUtils.convert(tenantList, TenantListVo.class);
         try {
-            // 如果只超管返回所有租户
+            // 如果超管返回所有租户
             if (LoginHelper.isSuperAdmin()) {
                 result.setVoList(voList);
                 return R.ok(result);
@@ -223,7 +245,6 @@ public class AuthController {
         String host;
         String referer = request.getHeader("referer");
         if (StringUtils.isNotBlank(referer)) {
-            // 这里从referer中取值是为了本地使用hosts添加虚拟域名，方便本地环境调试
             host = referer.split("//")[1].split("/")[0];
         } else {
             host = new URL(request.getRequestURL().toString()).getHost();

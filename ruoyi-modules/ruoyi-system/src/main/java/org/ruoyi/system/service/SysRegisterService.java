@@ -7,6 +7,7 @@ import org.ruoyi.common.core.constant.Constants;
 import org.ruoyi.common.core.constant.GlobalConstants;
 import org.ruoyi.common.core.domain.model.RegisterBody;
 import org.ruoyi.common.core.enums.UserType;
+import org.ruoyi.common.core.exception.ServiceException;
 import org.ruoyi.common.core.exception.user.CaptchaException;
 import org.ruoyi.common.core.exception.user.CaptchaExpireException;
 import org.ruoyi.common.core.exception.user.UserException;
@@ -41,35 +42,104 @@ public class SysRegisterService {
      */
     public void register(RegisterBody registerBody) {
         String tenantId = registerBody.getTenantId();
-        String username = registerBody.getUsername();
-        String password = registerBody.getPassword();
-        // 校验用户类型是否存在
-        String userType = UserType.getUserType(registerBody.getUserType()).getUserType();
 
-        boolean captchaEnabled = captchaProperties.getEnable();
-        // 验证码开关
-        if (captchaEnabled) {
-            validateCaptcha(tenantId, username, registerBody.getCode(), registerBody.getUuid());
+        // 邮件注册
+        if (StringUtils.isNotBlank(registerBody.getEmail())) {
+            registerByEmail(registerBody, tenantId);
+            return;
         }
+
+        // // 用户名密码注册（暂不支持）
+        // String username = registerBody.getUsername();
+        // String password = registerBody.getPassword();
+        // if (StringUtils.isBlank(username)) {
+        //     throw new ServiceException("用户名不能为空");
+        // }
+        // if (StringUtils.isBlank(password)) {
+        //     throw new ServiceException("密码不能为空");
+        // }
+        // // 校验用户类型是否存在，默认 sys_user
+        // String userType = UserType.getUserType(
+        //     StringUtils.isBlank(registerBody.getUserType()) ? UserType.SYS_USER.getUserType() : registerBody.getUserType()
+        // ).getUserType();
+        //
+        // boolean captchaEnabled = captchaProperties.getEnable();
+        // if (captchaEnabled) {
+        //     validateCaptcha(tenantId, username, registerBody.getCode(), registerBody.getUuid());
+        // }
+        // SysUserBo sysUser = new SysUserBo();
+        // sysUser.setUserName(username);
+        // sysUser.setNickName(username);
+        // sysUser.setPassword(BCrypt.hashpw(password));
+        // sysUser.setUserType(userType);
+        //
+        // boolean exist = TenantHelper.dynamic(tenantId, () ->
+        //     userMapper.exists(new LambdaQueryWrapper<SysUser>()
+        //         .eq(SysUser::getUserName, sysUser.getUserName())));
+        // if (exist) {
+        //     throw new UserException("user.register.save.error", username);
+        // }
+        // boolean regFlag = userService.registerUser(sysUser, tenantId);
+        // if (!regFlag) {
+        //     throw new UserException("user.register.error");
+        // }
+        // recordLogininfor(tenantId, username, Constants.REGISTER, MessageUtils.message("user.register.success"));
+    }
+
+    private void registerByEmail(RegisterBody registerBody, String tenantId) {
+        String username = registerBody.getUsername();
+        String email = registerBody.getEmail();
+        String emailCode = registerBody.getEmailCode();
+        String password = registerBody.getPassword();
+        if (StringUtils.isBlank(username)) {
+            throw new ServiceException("用户名不能为空");
+        }
+        if (StringUtils.isBlank(emailCode)) {
+            throw new ServiceException("邮箱验证码不能为空");
+        }
+        if (StringUtils.isBlank(password)) {
+            throw new ServiceException("密码不能为空");
+        }
+        // 校验邮箱验证码
+        String verifyKey = GlobalConstants.CAPTCHA_CODE_KEY + email;
+        String captcha = RedisUtils.getCacheObject(verifyKey);
+        RedisUtils.deleteObject(verifyKey);
+        if (captcha == null) {
+            throw new CaptchaExpireException();
+        }
+        if (!StringUtils.equalsIgnoreCase(emailCode, captcha)) {
+            throw new CaptchaException();
+        }
+        // 检查邮箱是否已注册
+        boolean exist = TenantHelper.dynamic(tenantId, () ->
+            userMapper.exists(new LambdaQueryWrapper<SysUser>()
+                .eq(SysUser::getEmail, email)));
+        if (exist) {
+            throw new ServiceException("该邮箱已被注册");
+        }
+        // 检查用户名是否已存在
+        boolean userNameExist = TenantHelper.dynamic(tenantId, () ->
+            userMapper.exists(new LambdaQueryWrapper<SysUser>()
+                .eq(SysUser::getUserName, username)));
+        if (userNameExist) {
+            throw new UserException("user.register.save.error", username);
+        }
+        String userType = UserType.getUserType(
+            StringUtils.isBlank(registerBody.getUserType()) ? UserType.SYS_USER.getUserType() : registerBody.getUserType()
+        ).getUserType();
         SysUserBo sysUser = new SysUserBo();
         sysUser.setUserName(username);
         sysUser.setNickName(username);
+        sysUser.setEmail(email);
         sysUser.setPassword(BCrypt.hashpw(password));
         sysUser.setUserType(userType);
-
-        boolean exist = TenantHelper.dynamic(tenantId, () -> {
-            return userMapper.exists(new LambdaQueryWrapper<SysUser>()
-                .eq(SysUser::getUserName, sysUser.getUserName()));
-        });
-        if (exist) {
-            throw new UserException("user.register.save.error", username);
-        }
         boolean regFlag = userService.registerUser(sysUser, tenantId);
         if (!regFlag) {
             throw new UserException("user.register.error");
         }
-        recordLogininfor(tenantId, username, Constants.REGISTER, MessageUtils.message("user.register.success"));
+        recordLogininfor(tenantId, email, Constants.REGISTER, MessageUtils.message("user.register.success"));
     }
+
 
     /**
      * 校验验证码

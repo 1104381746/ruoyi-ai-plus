@@ -5,7 +5,6 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.*;
-import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.ruoyi.common.satoken.utils.LoginHelper;
 import org.ruoyi.service.chat.IChatSessionService;
 import org.springframework.web.bind.annotation.*;
@@ -40,7 +39,6 @@ public class    ChatSessionController extends BaseController {
     /**
      * 查询会话管理列表
      */
-    @SaCheckPermission("system:session:list")
     @GetMapping("/list")
     public TableDataInfo<ChatSessionVo> list(ChatSessionBo bo, PageQuery pageQuery) {
         if(!LoginHelper.isLogin()){
@@ -55,7 +53,6 @@ public class    ChatSessionController extends BaseController {
     /**
      * 导出会话管理列表
      */
-    @SaCheckPermission("system:session:export")
     @Log(title = "会话管理", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(ChatSessionBo bo, HttpServletResponse response) {
@@ -68,7 +65,6 @@ public class    ChatSessionController extends BaseController {
      *
      * @param id 主键
      */
-    @SaCheckPermission("system:session:query")
     @GetMapping("/{id}")
     public R<ChatSessionVo> getInfo(@NotNull(message = "主键不能为空")
                                      @PathVariable Long id) {
@@ -78,7 +74,6 @@ public class    ChatSessionController extends BaseController {
     /**
      * 新增会话管理
      */
-    @SaCheckPermission("system:session:add")
     @Log(title = "会话管理", businessType = BusinessType.INSERT)
     @RepeatSubmit()
     @PostMapping()
@@ -92,7 +87,6 @@ public class    ChatSessionController extends BaseController {
     /**
      * 修改会话管理
      */
-    @SaCheckPermission("system:session:edit")
     @Log(title = "会话管理", businessType = BusinessType.UPDATE)
     @RepeatSubmit()
     @PutMapping()
@@ -105,7 +99,6 @@ public class    ChatSessionController extends BaseController {
      *
      * @param ids 主键串
      */
-    @SaCheckPermission("system:session:remove")
     @Log(title = "会话管理", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
     public R<Void> remove(@NotEmpty(message = "主键不能为空")

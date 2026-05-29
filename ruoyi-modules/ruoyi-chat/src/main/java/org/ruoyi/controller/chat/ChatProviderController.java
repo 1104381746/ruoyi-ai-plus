@@ -5,7 +5,6 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.*;
-import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.ruoyi.service.chat.IChatProviderService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.annotation.Validated;
@@ -39,7 +38,6 @@ public class ChatProviderController extends BaseController {
     /**
      * 查询厂商管理列表
      */
-    @SaCheckPermission("system:provider:list")
     @GetMapping("/list")
     public TableDataInfo<ChatProviderVo> list(ChatProviderBo bo, PageQuery pageQuery) {
         return chatProviderService.queryPageList(bo, pageQuery);
@@ -48,7 +46,6 @@ public class ChatProviderController extends BaseController {
     /**
      * 导出厂商管理列表
      */
-    @SaCheckPermission("system:provider:export")
     @Log(title = "厂商管理", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(ChatProviderBo bo, HttpServletResponse response) {
@@ -61,7 +58,6 @@ public class ChatProviderController extends BaseController {
      *
      * @param id 主键
      */
-    @SaCheckPermission("system:provider:query")
     @GetMapping("/{id}")
     public R<ChatProviderVo> getInfo(@NotNull(message = "主键不能为空")
                                      @PathVariable Long id) {
@@ -71,7 +67,6 @@ public class ChatProviderController extends BaseController {
     /**
      * 新增厂商管理
      */
-    @SaCheckPermission("system:provider:add")
     @Log(title = "厂商管理", businessType = BusinessType.INSERT)
     @RepeatSubmit()
     @PostMapping()
@@ -82,7 +77,6 @@ public class ChatProviderController extends BaseController {
     /**
      * 修改厂商管理
      */
-    @SaCheckPermission("system:provider:edit")
     @Log(title = "厂商管理", businessType = BusinessType.UPDATE)
     @RepeatSubmit()
     @PutMapping()
@@ -95,7 +89,6 @@ public class ChatProviderController extends BaseController {
      *
      * @param ids 主键串
      */
-    @SaCheckPermission("system:provider:remove")
     @Log(title = "厂商管理", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
     public R<Void> remove(@NotEmpty(message = "主键不能为空")

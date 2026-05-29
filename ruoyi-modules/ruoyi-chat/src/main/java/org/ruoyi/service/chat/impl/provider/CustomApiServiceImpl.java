@@ -39,6 +39,8 @@ public class CustomApiServiceImpl implements AbstractChatService {
             .apiKey(defaultIfBlank(chatModelVo.getApiKey(), "EMPTY"))
             .modelName(chatModelVo.getModelName())
             .timeout(DEFAULT_TIMEOUT)
+            .logRequests(true)
+            .logResponses(true)
             .listeners(List.of(new MyChatModelListener()))
             .returnThinking(chatRequest.getEnableThinking())
             .build();
@@ -51,6 +53,8 @@ public class CustomApiServiceImpl implements AbstractChatService {
             .apiKey(defaultIfBlank(chatModelVo.getApiKey(), "EMPTY"))
             .modelName(chatModelVo.getModelName())
             .timeout(DEFAULT_TIMEOUT)
+            .logRequests(true)
+            .logResponses(true)
             .build();
     }
 

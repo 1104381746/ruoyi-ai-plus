@@ -95,6 +95,11 @@ public class SysTenant extends BaseEntity {
     private String status;
 
     /**
+     * 是否默认租户（Y是 N否）
+     */
+    private String isDefault;
+
+    /**
      * 删除标志（0代表存在 1代表删除）
      */
     @TableLogic

@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import org.ruoyi.common.encrypt.annotation.EncryptField;
+import org.ruoyi.common.encrypt.enumd.AlgorithmType;
 import org.ruoyi.common.tenant.core.TenantEntity;
 
 import java.io.Serial;
@@ -67,6 +70,8 @@ public class ChatModel extends TenantEntity {
     /**
      * 密钥
      */
+    @EncryptField(algorithm = AlgorithmType.AES)
+    @ToString.Exclude
     private String apiKey;
 
     /**

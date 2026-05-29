@@ -93,8 +93,6 @@ public class XssHttpServletRequestWrapper extends HttpServletRequestWrapper {
             return super.getInputStream();
         }
 
-        // xss过滤
-        json = HtmlUtil.cleanHtmlTag(json).trim();
         byte[] jsonBytes = json.getBytes(StandardCharsets.UTF_8);
         final ByteArrayInputStream bis = IoUtil.toStream(jsonBytes);
         return new ServletInputStream() {

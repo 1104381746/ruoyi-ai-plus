@@ -55,6 +55,7 @@ public class SysLoginService {
     @Value("${user.password.lockTime}")
     private Integer lockTime;
 
+    private final ISysConfigService configService;
     private final ISysTenantService tenantService;
     private final ISysPermissionService permissionService;
     private final ISysSocialService sysSocialService;
@@ -224,6 +225,9 @@ public class SysLoginService {
      * @param tenantId 租户ID
      */
     public void checkTenant(String tenantId) {
+        if (!configService.selectMultiTenancyEnabled()) {
+            return;
+        }
         if (!TenantHelper.isEnable()) {
             return;
         }

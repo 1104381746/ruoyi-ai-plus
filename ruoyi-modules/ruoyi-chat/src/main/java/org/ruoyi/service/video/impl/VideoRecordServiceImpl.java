@@ -66,6 +66,7 @@ public class VideoRecordServiceImpl implements IVideoRecordService {
                 .duration(bo.getDuration())
                 .seed(bo.getSeed())
                 .referenceImageUrl(bo.getReferenceImageUrl())
+                .sessionId(bo.getSessionId())
                 .build();
 
         var providers = applicationContext.getBeansOfType(AbstractVideoGenerationService.class).values();
@@ -87,10 +88,9 @@ public class VideoRecordServiceImpl implements IVideoRecordService {
         record.setReferenceImageUrl(bo.getReferenceImageUrl());
 
         String videoUrl = null;
-        cancelManager.setCurrent(bo.getSessionId());
         try {
             videoUrl = provider.generateVideo(context);
-            if (cancelManager.isCancelled()) {
+            if (cancelManager.isCancelled(bo.getSessionId())) {
                 record.setStatus(3);
                 videoRecordMapper.insert(record);
                 return converter.convert(record, VideoRecordVo.class);
@@ -107,7 +107,6 @@ public class VideoRecordServiceImpl implements IVideoRecordService {
             videoRecordMapper.insert(record);
             throw e instanceof RuntimeException re ? re : new RuntimeException(e);
         } finally {
-            cancelManager.clearCurrent();
             cancelManager.clear(bo.getSessionId());
         }
         videoRecordMapper.insert(record);
@@ -122,9 +121,13 @@ public class VideoRecordServiceImpl implements IVideoRecordService {
 
     private String uploadToOss(String url) {
         try {
-            HttpClient client = HttpClient.newHttpClient();
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(java.time.Duration.ofSeconds(10))
+                    .build();
             HttpResponse<InputStream> resp = client.send(
-                    HttpRequest.newBuilder(URI.create(url)).build(),
+                    HttpRequest.newBuilder(URI.create(url))
+                            .timeout(java.time.Duration.ofMinutes(5))
+                            .build(),
                     HttpResponse.BodyHandlers.ofInputStream());
             long contentLength = resp.headers().firstValueAsLong("content-length").orElse(-1L);
             try (InputStream is = resp.body()) {

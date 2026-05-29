@@ -23,7 +23,7 @@ public class VolcengineVideoServiceImpl extends AbstractVideoGenerationService {
     private static final int POLL_MAX_ATTEMPTS = 120;
 
     @Override
-    protected String doGenerateVideo(ChatModelVo modelVo, String prompt, String size, Integer duration, Integer seed, String referenceImageUrl) {
+    protected String doGenerateVideo(ChatModelVo modelVo, String prompt, String size, Integer duration, Integer seed, String referenceImageUrl, String sessionId) {
         IVisualService visualService = VisualServiceImpl.getInstance();
         visualService.setAccessKey(modelVo.getApiKey().split("\\.")[0]);
         visualService.setSecretKey(modelVo.getApiKey().split("\\.")[1]);
@@ -53,7 +53,7 @@ public class VolcengineVideoServiceImpl extends AbstractVideoGenerationService {
             }
 
             String taskId = result.getJSONObject("data").getString("task_id");
-            return pollTask(visualService, taskId, req.getString("req_key"));
+            return pollTask(visualService, taskId, req.getString("req_key"), sessionId);
         } catch (RuntimeException e) {
             throw e;
         } catch (Exception e) {
@@ -62,13 +62,13 @@ public class VolcengineVideoServiceImpl extends AbstractVideoGenerationService {
         }
     }
 
-    private String pollTask(IVisualService visualService, String taskId, String reqKey) {
+    private String pollTask(IVisualService visualService, String taskId, String reqKey, String sessionId) {
         JSONObject req = new JSONObject();
         req.put("req_key", reqKey);
         req.put("task_id", taskId);
 
         for (int i = 0; i < POLL_MAX_ATTEMPTS; i++) {
-            if (cancelManager.isCancelled()) {
+            if (cancelManager.isCancelled(sessionId)) {
                 log.info("即梦视频任务 {} 被用户取消", taskId);
                 throw new GenerationCancelledException();
             }
@@ -105,19 +105,12 @@ public class VolcengineVideoServiceImpl extends AbstractVideoGenerationService {
         throw new RuntimeException("视频生成超时");
     }
 
-    private String convertSize(String size) {
-        return switch (size) {
-            case "720x480" -> "3:2";
-            case "1280x720" -> "16:9";
-            case "1920x1080" -> "16:9";
-            case "3840x2160" -> "16:9";
-            default -> "16:9";
-        };
-    }
-
     private String downloadAndEncodeBase64(String url) throws Exception {
         java.net.URL imageUrl = new java.net.URL(url);
-        try (java.io.InputStream in = imageUrl.openStream();
+        java.net.URLConnection conn = imageUrl.openConnection();
+        conn.setConnectTimeout(10000);
+        conn.setReadTimeout(30000);
+        try (java.io.InputStream in = conn.getInputStream();
              java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream()) {
             byte[] buffer = new byte[8192];
             int len;

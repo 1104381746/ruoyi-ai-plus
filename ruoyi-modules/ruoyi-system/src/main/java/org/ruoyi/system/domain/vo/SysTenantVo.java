@@ -111,5 +111,10 @@ public class SysTenantVo implements Serializable {
     @ExcelDictFormat(readConverterExp = "0=正常,1=停用")
     private String status;
 
+    /**
+     * 是否默认租户（Y是 N否）
+     */
+    private String isDefault;
+
 
 }

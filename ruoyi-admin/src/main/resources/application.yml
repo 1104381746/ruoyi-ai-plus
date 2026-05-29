@@ -109,7 +109,7 @@ sa-token:
   # 在多人登录同一账号时，是否共用一个token (为true时所有登录共用一个token, 为false时每次登录新建一个token)
   is-share: false
   # jwt秘钥
-  jwt-secret-key: abcdefghijklmnopqrstuvwxyz
+  jwt-secret-key: r8K#mP2$vL9nQ5xW3jF7hD4bT6yA1cE0
 
 # security配置
 security:
@@ -149,7 +149,7 @@ mybatis-plus:
   # 对应的 XML 文件位置
   mapperLocations: classpath*:mapper/**/*Mapper.xml
   # 实体扫描，多个package用逗号或者分号分隔
-  typeAliasesPackage: org.ruoyi.**.domain
+  typeAliasesPackage: org.ruoyi.**.domain,org.ruoyi.common.chat.entity.chat
   global-config:
     dbConfig:
       # 主键类型
@@ -160,13 +160,13 @@ mybatis-plus:
 # 数据加密
 mybatis-encryptor:
   # 是否开启加密
-  enable: false
+  enable: true
   # 默认加密算法
-  algorithm: BASE64
+  algorithm: AES
   # 编码方式 BASE64/HEX。默认BASE64
   encode: BASE64
-  # 安全秘钥 对称算法的秘钥 如：AES，SM4
-  password:
+  # 安全秘钥 对称算法的秘钥 如：AES，SM4（AES需要16/24/32位）
+  password: RuoYiAI@2025Key!
   # 公私钥 非对称算法的公私钥 如：SM2，RSA
   publicKey:
   privateKey:
@@ -270,22 +270,8 @@ demo:
     - /system/info/**
 # 向量库配置
 vector-store:
-  # 向量存储类型 可选(weaviate/milvus/qdrant)
-  # 如需修改向量库类型，请修改此配置值!
-  type: milvus
-  # Weaviate配置
+  type: weaviate
   weaviate:
     protocol: http
-    host: 127.0.0.1:6038
+    host: weaviate:8080
     classname: LocalKnowledge
-  # Milvus配置
-  milvus:
-    url: http://localhost:19530
-    collectionname: LocalKnowledge
-  # Qdrant配置
-  qdrant:
-    host: localhost
-    port: 6334
-    collectionname: LocalKnowledge
-    api-key:
-    use-tls: false

@@ -5,7 +5,6 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.*;
-import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.ruoyi.domain.bo.knowledge.KnowledgeAttachBo;
 import org.ruoyi.domain.bo.knowledge.KnowledgeInfoUploadBo;
 import org.ruoyi.domain.vo.knowledge.KnowledgeAttachVo;
@@ -40,7 +39,6 @@ public class KnowledgeAttachController extends BaseController {
     /**
      * 查询知识库附件列表
      */
-    @SaCheckPermission("system:attach:list")
     @GetMapping("/list")
     public TableDataInfo<KnowledgeAttachVo> list(KnowledgeAttachBo bo, PageQuery pageQuery) {
         return knowledgeAttachService.queryPageList(bo, pageQuery);
@@ -49,7 +47,6 @@ public class KnowledgeAttachController extends BaseController {
     /**
      * 导出知识库附件列表
      */
-    @SaCheckPermission("system:attach:export")
     @Log(title = "知识库附件", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(KnowledgeAttachBo bo, HttpServletResponse response) {
@@ -62,7 +59,6 @@ public class KnowledgeAttachController extends BaseController {
      *
      * @param id 主键
      */
-    @SaCheckPermission("system:attach:query")
     @GetMapping("/{id}")
     public R<KnowledgeAttachVo> getInfo(@NotNull(message = "主键不能为空")
                                      @PathVariable Long id) {
@@ -72,7 +68,6 @@ public class KnowledgeAttachController extends BaseController {
     /**
      * 新增知识库附件
      */
-    @SaCheckPermission("system:attach:add")
     @Log(title = "知识库附件", businessType = BusinessType.INSERT)
     @RepeatSubmit()
     @PostMapping()
@@ -83,7 +78,6 @@ public class KnowledgeAttachController extends BaseController {
     /**
      * 修改知识库附件
      */
-    @SaCheckPermission("system:attach:edit")
     @Log(title = "知识库附件", businessType = BusinessType.UPDATE)
     @RepeatSubmit()
     @PutMapping()
@@ -96,7 +90,6 @@ public class KnowledgeAttachController extends BaseController {
      *
      * @param ids 主键串
      */
-    @SaCheckPermission("system:attach:remove")
     @Log(title = "知识库附件", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
     public R<Void> remove(@NotEmpty(message = "主键不能为空")

@@ -163,6 +163,28 @@ public class SysTenantController extends BaseController {
 
 
     /**
+     * 设置默认租户
+     */
+    @SaCheckRole(TenantConstants.SUPER_ADMIN_ROLE_KEY)
+    @SaCheckPermission("system:tenant:edit")
+    @Log(title = "租户管理", businessType = BusinessType.UPDATE)
+    @PutMapping("/{id}/default")
+    public R<Void> setDefault(@NotNull(message = "主键不能为空") @PathVariable Long id) {
+        return toAjax(tenantService.setDefaultTenant(id));
+    }
+
+    /**
+     * 取消默认租户
+     */
+    @SaCheckRole(TenantConstants.SUPER_ADMIN_ROLE_KEY)
+    @SaCheckPermission("system:tenant:edit")
+    @Log(title = "租户管理", businessType = BusinessType.UPDATE)
+    @DeleteMapping("/{id}/default")
+    public R<Void> clearDefault(@NotNull(message = "主键不能为空") @PathVariable Long id) {
+        return toAjax(tenantService.clearDefaultTenant(id));
+    }
+
+    /**
      * 同步租户套餐
      *
      * @param tenantId  租户id

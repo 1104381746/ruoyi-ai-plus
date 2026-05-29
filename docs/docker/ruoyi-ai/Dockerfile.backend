@@ -11,7 +11,6 @@ COPY pom.xml .
 COPY ruoyi-admin ./ruoyi-admin
 COPY ruoyi-common ./ruoyi-common
 COPY ruoyi-modules ./ruoyi-modules
-COPY ruoyi-extend ./ruoyi-extend
 
 
 # 构建项目 (使用 prod profile)

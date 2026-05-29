@@ -23,13 +23,26 @@ public class SocialUtils  {
 
     private static final AuthRedisStateCache STATE_CACHE = SpringUtils.getBean(AuthRedisStateCache.class);
 
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(SocialUtils.class);
+
     @SuppressWarnings("unchecked")
     public static AuthResponse<AuthUser> loginAuth(String source, String code, String state, SocialProperties socialProperties) throws AuthException {
+        log.info("socialLogin source={} code={} state={}", source, code, state);
         AuthRequest authRequest = getAuthRequest(source, socialProperties);
         AuthCallback callback = new AuthCallback();
         callback.setCode(code);
         callback.setState(state);
         return authRequest.login(callback);
+    }
+
+    /**
+     * 获取缓存的 state 原始值
+     *
+     * @param stateKey state key
+     * @return state 原始值
+     */
+    public static String getStateValue(String stateKey) {
+        return STATE_CACHE.get(stateKey);
     }
 
     public static AuthRequest getAuthRequest(String source, SocialProperties socialProperties) throws AuthException {

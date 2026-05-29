@@ -4,7 +4,6 @@ import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.ArrayUtil;
 import org.ruoyi.common.satoken.utils.LoginHelper;
 import org.ruoyi.common.sensitive.core.SensitiveService;
-import org.ruoyi.common.tenant.helper.TenantHelper;
 import org.springframework.stereotype.Service;
 
 /**
@@ -37,11 +36,8 @@ public class SysSensitiveServiceImpl implements SensitiveService {
         } else if (permsExist && StpUtil.hasPermissionOr(perms)) {
             return false;
         }
-
-        if (TenantHelper.isEnable()) {
-            return !LoginHelper.isSuperAdmin() && !LoginHelper.isTenantAdmin();
-        }
-        return !LoginHelper.isSuperAdmin();
+        // 所有人都脱敏（包括超级管理员）
+        return true;
     }
 
 }

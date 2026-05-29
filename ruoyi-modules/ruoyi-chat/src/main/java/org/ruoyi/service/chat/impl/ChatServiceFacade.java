@@ -36,16 +36,11 @@ import org.ruoyi.agent.WebSearchAgent;
 import org.ruoyi.agent.tool.ExecuteSqlQueryTool;
 import org.ruoyi.agent.tool.QueryAllTablesTool;
 import org.ruoyi.agent.tool.QueryTableSchemaTool;
-import org.ruoyi.common.chat.base.ThreadContext;
 import org.ruoyi.common.chat.domain.dto.request.ChatRequest;
-import org.ruoyi.common.chat.domain.dto.request.ReSumeRunner;
-import org.ruoyi.common.chat.domain.dto.request.WorkFlowRunner;
 import org.ruoyi.common.chat.domain.vo.chat.ChatModelVo;
 import org.ruoyi.common.chat.enums.RoleType;
 import org.ruoyi.common.chat.service.chat.IChatModelService;
 import org.ruoyi.common.chat.service.chat.IChatService;
-import org.ruoyi.common.chat.service.workFlow.IWorkFlowStarterService;
-import org.ruoyi.common.core.utils.ObjectUtils;
 import org.ruoyi.common.core.utils.StringUtils;
 import org.ruoyi.common.satoken.utils.LoginHelper;
 import org.ruoyi.common.sse.core.SseEmitterManager;
@@ -99,8 +94,6 @@ public class ChatServiceFacade implements IChatService {
     private final SseEmitterManager sseEmitterManager;
 
     private final IChatMessageService chatMessageService;
-
-    private final IWorkFlowStarterService workFlowStarterService;
 
     private final ToolProviderFactory toolProviderFactory;
 
@@ -164,38 +157,6 @@ public class ChatServiceFacade implements IChatService {
      * @return 如果需要提前返回则返回SseEmitter，否则返回null
      */
     private SseEmitter handleSpecialChatModes(ChatRequest chatRequest) {
-        // 处理工作流对话
-        if (chatRequest.getEnableWorkFlow()) {
-            log.info("处理工作流对话,会话: {}", chatRequest.getSessionId());
-
-            WorkFlowRunner runner = chatRequest.getWorkFlowRunner();
-            if (ObjectUtils.isEmpty(runner)) {
-                log.warn("工作流参数为空");
-            }
-            return workFlowStarterService.streaming(
-                ThreadContext.getCurrentUser(),
-                runner.getUuid(),
-                runner.getInputs(),
-                chatRequest.getSessionId()
-            );
-        }
-
-        // 处理人机交互恢复
-        if (chatRequest.getIsResume()) {
-            log.info("处理人机交互恢复");
-            ReSumeRunner reSumeRunner = chatRequest.getReSumeRunner();
-            if (ObjectUtils.isEmpty(reSumeRunner)) {
-                log.warn("人机交互恢复参数为空");
-            }
-            workFlowStarterService.resumeFlow(
-                reSumeRunner.getRuntimeUuid(),
-                reSumeRunner.getFeedbackContent(),
-                chatRequest.getEmitter()
-            );
-
-            return chatRequest.getEmitter();
-
-        }
         // 处理思考模式
         if (chatRequest.getEnableThinking()) {
            return handleThinkingMode(chatRequest);
@@ -527,7 +488,17 @@ public class ChatServiceFacade implements IChatService {
                     String fullMessage = messageBuffer.toString();
 
                     if (fullMessage.isEmpty()) {
-                          log.warn("接收到空消息");
+                        // 如果 messageBuffer 为空，尝试从 completeResponse 获取文本（兼容非流式场景）
+                        if (completeResponse.aiMessage() != null
+                                && completeResponse.aiMessage().text() != null) {
+                            fullMessage = completeResponse.aiMessage().text();
+                        }
+                    }
+
+                    if (fullMessage.isEmpty()) {
+                        log.warn("接收到空消息，ChatResponse详情: aiMessage={}, metadata={}",
+                                completeResponse.aiMessage(), completeResponse.metadata());
+                        SseMessageUtils.sendError(userId, "模型返回了空响应，请检查 API 地址和密钥配置是否正确");
                     } else {
                         // 保存助手回复消息
                         chatMessageService.saveChatMessage(userId, chatRequest.getSessionId(), fullMessage, RoleType.ASSISTANT.getName(), chatRequest.getModel());
@@ -535,9 +506,9 @@ public class ChatServiceFacade implements IChatService {
 
                     // 关闭SSE连接
                     SseMessageUtils.completeConnection(userId, tokenValue);
-                     log.info("消息结束，已保存到数据库");
+                    log.info("消息结束，已保存到数据库");
                 } catch (Exception e) {
-                      log.error("完成响应时出错: {}", e.getMessage(), e);
+                    log.error("完成响应时出错: {}", e.getMessage(), e);
                 }
             }
 

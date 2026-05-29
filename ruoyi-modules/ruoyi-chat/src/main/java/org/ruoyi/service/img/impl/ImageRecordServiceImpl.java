@@ -66,6 +66,7 @@ public class ImageRecordServiceImpl implements IImageRecordService {
                 .size(bo.getSize())
                 .seed(bo.getSeed())
                 .referenceImageUrl(bo.getReferenceImageUrl())
+                .sessionId(bo.getSessionId())
                 .build();
 
         var providers = applicationContext.getBeansOfType(AbstractImageGenerationService.class).values();
@@ -88,10 +89,9 @@ public class ImageRecordServiceImpl implements IImageRecordService {
         record.setReferenceImageUrl(bo.getReferenceImageUrl());
 
         String imageUrl;
-        cancelManager.setCurrent(bo.getSessionId());
         try {
             imageUrl = provider.generateImage(context);
-            if (cancelManager.isCancelled()) {
+            if (cancelManager.isCancelled(bo.getSessionId())) {
                 record.setStatus(3);
                 imageRecordMapper.insert(record);
                 return converter.convert(record, ImageRecordVo.class);
@@ -108,7 +108,6 @@ public class ImageRecordServiceImpl implements IImageRecordService {
             imageRecordMapper.insert(record);
             throw e instanceof RuntimeException re ? re : new RuntimeException(e);
         } finally {
-            cancelManager.clearCurrent();
             cancelManager.clear(bo.getSessionId());
         }
         imageRecordMapper.insert(record);
@@ -134,15 +133,20 @@ public class ImageRecordServiceImpl implements IImageRecordService {
                     return OssFactory.instance().uploadSuffix(is, "." + ext, (long) bytes.length, "image/" + ext).getUrl();
                 }
             }
-            HttpClient client = HttpClient.newHttpClient();
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(java.time.Duration.ofSeconds(10))
+                    .build();
             HttpResponse<InputStream> resp = client.send(
-                    HttpRequest.newBuilder(URI.create(url)).build(),
+                    HttpRequest.newBuilder(URI.create(url))
+                            .timeout(java.time.Duration.ofSeconds(30))
+                            .build(),
                     HttpResponse.BodyHandlers.ofInputStream());
             long contentLength = resp.headers().firstValueAsLong("content-length").orElse(-1L);
-            String suffix = url.contains(".png") ? ".png" : ".jpg";
-            String contentType = url.contains(".png") ? "image/png" : "image/jpeg";
+            String ct = resp.headers().firstValue("content-type").orElse("image/jpeg");
+            String ext = ct.contains("png") ? ".png" : ct.contains("webp") ? ".webp" : ct.contains("gif") ? ".gif" : ".jpg";
+            String mimeType = ct.contains(";") ? ct.substring(0, ct.indexOf(';')).trim() : ct;
             try (InputStream is = resp.body()) {
-                return OssFactory.instance().uploadSuffix(is, suffix, contentLength, contentType).getUrl();
+                return OssFactory.instance().uploadSuffix(is, ext, contentLength, mimeType).getUrl();
             }
         } catch (Exception e) {
             log.warn("图片上传OSS失败，使用原始URL: {}", e.getMessage());

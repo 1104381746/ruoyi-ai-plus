@@ -17,4 +17,6 @@ public class VideoContext {
     private Integer seed;
     /** 参考图URL（图生视频时使用，可选） */
     private String referenceImageUrl;
+    /** 会话ID（用于取消任务） */
+    private String sessionId;
 }

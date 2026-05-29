@@ -19,13 +19,17 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CustomApiVideoServiceImpl extends AbstractVideoGenerationService {
 
-    private final RestClient restClient = RestClient.create();
+    private final RestClient restClient = RestClient.builder()
+        .defaultStatusHandler(status -> status.is4xxClientError() || status.is5xxServerError(), (request, response) -> {
+            throw new RuntimeException("HTTP " + response.getStatusCode() + ": " + new String(response.getBody().readAllBytes()));
+        })
+        .build();
     private final GenerationCancelManager cancelManager;
     private static final int POLL_INTERVAL_MS = 5000;
     private static final int POLL_MAX_ATTEMPTS = 120;
 
     @Override
-    protected String doGenerateVideo(ChatModelVo modelVo, String prompt, String size, Integer duration, Integer seed, String referenceImageUrl) {
+    protected String doGenerateVideo(ChatModelVo modelVo, String prompt, String size, Integer duration, Integer seed, String referenceImageUrl, String sessionId) {
         var body = new LinkedHashMap<String, Object>();
         body.put("model", modelVo.getModelName());
         body.put("prompt", prompt);
@@ -37,7 +41,7 @@ public class CustomApiVideoServiceImpl extends AbstractVideoGenerationService {
         try {
             log.info("调用文生视频接口: {}, model: {}", modelVo.getApiHost(), modelVo.getModelName());
             var response = restClient.post()
-                .uri(modelVo.getApiHost() + "/v1/videos")
+                .uri(modelVo.getApiHost() + "/videos")
                 .header("Authorization", "Bearer " + modelVo.getApiKey())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(body)
@@ -53,21 +57,24 @@ public class CustomApiVideoServiceImpl extends AbstractVideoGenerationService {
             String taskId = (String) response.get("task_id");
             if (taskId == null) taskId = (String) response.get("id");
             if (taskId != null) {
-                return pollTask(modelVo, taskId);
+                return pollTask(modelVo, taskId, sessionId);
             }
 
             log.error("文生视频接口返回异常: {}", response);
             return "";
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("视频生成被中断");
         } catch (Exception e) {
             log.error("文生视频接口调用失败", e);
             throw new RuntimeException("视频生成失败: " + e.getMessage());
         }
     }
 
-    private String pollTask(ChatModelVo modelVo, String taskId) throws InterruptedException {
-        String taskUrl = modelVo.getApiHost() + "/v1/videos/" + taskId;
+    private String pollTask(ChatModelVo modelVo, String taskId, String sessionId) throws InterruptedException {
+        String taskUrl = modelVo.getApiHost() + "/videos/" + taskId;
         for (int i = 0; i < POLL_MAX_ATTEMPTS; i++) {
-            if (cancelManager.isCancelled()) {
+            if (cancelManager.isCancelled(sessionId)) {
                 log.info("视频任务 {} 被用户取消", taskId);
                 throw new GenerationCancelledException();
             }

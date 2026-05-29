@@ -5,7 +5,6 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.*;
-import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.ruoyi.common.chat.service.chat.IChatModelService;
 import org.ruoyi.common.chat.domain.bo.chat.ChatModelBo;
 import org.ruoyi.common.chat.domain.vo.chat.ChatModelVo;
@@ -43,7 +42,6 @@ public class ChatModelController extends BaseController {
     /**
      * 查询模型管理列表
      */
-    @SaCheckPermission("system:model:list")
     @GetMapping("/list")
     public TableDataInfo<ChatModelVo> list(ChatModelBo bo, PageQuery pageQuery) {
         return chatModelService.queryPageList(bo, pageQuery);
@@ -78,7 +76,6 @@ public class ChatModelController extends BaseController {
     /**
      * 导出模型管理列表
      */
-    @SaCheckPermission("system:model:export")
     @Log(title = "模型管理", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(ChatModelBo bo, HttpServletResponse response) {
@@ -91,7 +88,6 @@ public class ChatModelController extends BaseController {
      *
      * @param id 主键
      */
-    @SaCheckPermission("system:model:query")
     @GetMapping("/{id}")
     public R<ChatModelVo> getInfo(@NotNull(message = "主键不能为空")
                                      @PathVariable Long id) {
@@ -101,7 +97,6 @@ public class ChatModelController extends BaseController {
     /**
      * 新增模型管理
      */
-    @SaCheckPermission("system:model:add")
     @Log(title = "模型管理", businessType = BusinessType.INSERT)
     @RepeatSubmit()
     @PostMapping()
@@ -112,7 +107,6 @@ public class ChatModelController extends BaseController {
     /**
      * 修改模型管理
      */
-    @SaCheckPermission("system:model:edit")
     @Log(title = "模型管理", businessType = BusinessType.UPDATE)
     @RepeatSubmit()
     @PutMapping()
@@ -125,7 +119,6 @@ public class ChatModelController extends BaseController {
      *
      * @param ids 主键串
      */
-    @SaCheckPermission("system:model:remove")
     @Log(title = "模型管理", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
     public R<Void> remove(@NotEmpty(message = "主键不能为空")

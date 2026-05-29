@@ -1,6 +1,7 @@
 package org.ruoyi.common.json.config;
 
 import com.fasterxml.jackson.databind.Module;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
@@ -40,8 +41,14 @@ public class JacksonConfig {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         javaTimeModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(formatter));
         javaTimeModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(formatter));
-        javaTimeModule.addDeserializer(Date.class, new CustomDateDeserializer());
         return javaTimeModule;
+    }
+
+    @Bean
+    public Module dateDeserializerModule() {
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(Date.class, new CustomDateDeserializer());
+        return module;
     }
 
     @Bean

@@ -13,9 +13,19 @@ import java.util.List;
 public class LoginTenantVo {
 
     /**
-     * 租户开关
+     * 租户开关（兼容旧字段）
      */
     private Boolean tenantEnabled;
+
+    /**
+     * 是否开启多租户（业务层）
+     */
+    private Boolean multiTenancy;
+
+    /**
+     * 默认租户ID（多租户关闭时使用）
+     */
+    private String defaultTenantId;
 
     /**
      * 租户对象列表

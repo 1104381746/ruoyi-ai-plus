@@ -108,6 +108,7 @@ public class SysTenantServiceImpl implements ISysTenantService {
         lqw.eq(bo.getExpireTime() != null, SysTenant::getExpireTime, bo.getExpireTime());
         lqw.eq(bo.getAccountCount() != null, SysTenant::getAccountCount, bo.getAccountCount());
         lqw.eq(StringUtils.isNotBlank(bo.getStatus()), SysTenant::getStatus, bo.getStatus());
+        lqw.eq(StringUtils.isNotBlank(bo.getIsDefault()), SysTenant::getIsDefault, bo.getIsDefault());
         lqw.orderByAsc(SysTenant::getId);
         return lqw;
     }
@@ -326,6 +327,57 @@ public class SysTenantServiceImpl implements ISysTenantService {
             }
         }
         return baseMapper.deleteByIds(ids) > 0;
+    }
+
+    /**
+     * 获取默认租户ID
+     */
+    @Override
+    public String getDefaultTenantId() {
+        SysTenant defaultTenant = TenantHelper.ignore(() ->
+            baseMapper.selectOne(new LambdaQueryWrapper<SysTenant>()
+                .eq(SysTenant::getIsDefault, SystemConstants.YES)
+                .last("LIMIT 1")));
+        if (ObjectUtil.isNotNull(defaultTenant)) {
+            return defaultTenant.getTenantId();
+        }
+        return TenantConstants.DEFAULT_TENANT_ID;
+    }
+
+    /**
+     * 设置默认租户
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public Boolean setDefaultTenant(Long id) {
+        SysTenant tenant = baseMapper.selectById(id);
+        if (ObjectUtil.isNull(tenant)) {
+            throw new ServiceException("租户不存在");
+        }
+        // 清除所有默认租户标记
+        TenantHelper.ignore(() -> {
+            SysTenant clear = new SysTenant();
+            clear.setIsDefault(SystemConstants.NO);
+            baseMapper.update(clear, new LambdaQueryWrapper<SysTenant>()
+                .eq(SysTenant::getIsDefault, SystemConstants.YES));
+        });
+        // 设置新默认租户
+        SysTenant update = new SysTenant();
+        update.setId(id);
+        update.setIsDefault(SystemConstants.YES);
+        return baseMapper.updateById(update) > 0;
+    }
+
+    @Override
+    public Boolean clearDefaultTenant(Long id) {
+        SysTenant tenant = baseMapper.selectById(id);
+        if (ObjectUtil.isNull(tenant)) {
+            throw new ServiceException("租户不存在");
+        }
+        SysTenant update = new SysTenant();
+        update.setId(id);
+        update.setIsDefault(SystemConstants.NO);
+        return baseMapper.updateById(update) > 0;
     }
 
     /**

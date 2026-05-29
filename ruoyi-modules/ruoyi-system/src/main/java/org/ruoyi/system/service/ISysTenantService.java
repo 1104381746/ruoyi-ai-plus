@@ -81,6 +81,21 @@ public interface ISysTenantService {
     Boolean syncTenantPackage(String tenantId, Long packageId);
 
     /**
+     * 获取默认租户ID
+     */
+    String getDefaultTenantId();
+
+    /**
+     * 设置默认租户
+     */
+    Boolean setDefaultTenant(Long id);
+
+    /**
+     * 取消默认租户
+     */
+    Boolean clearDefaultTenant(Long id);
+
+    /**
      * 同步租户字典
      */
     void syncTenantDict();

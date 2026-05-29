@@ -5,7 +5,10 @@ import cn.idev.excel.annotation.ExcelIgnoreUnannotated;
 import cn.idev.excel.annotation.ExcelProperty;
 import io.github.linpeilie.annotations.AutoMapper;
 import lombok.Data;
+import lombok.ToString;
 import org.ruoyi.common.chat.entity.chat.ChatModel;
+import org.ruoyi.common.sensitive.annotation.Sensitive;
+import org.ruoyi.common.sensitive.core.SensitiveStrategy;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -76,7 +79,8 @@ public class ChatModelVo implements Serializable {
     /**
      * 密钥
      */
-    @ExcelProperty(value = "密钥")
+    @Sensitive(strategy = SensitiveStrategy.PASSWORD)
+    @ToString.Exclude
     private String apiKey;
 
     /**

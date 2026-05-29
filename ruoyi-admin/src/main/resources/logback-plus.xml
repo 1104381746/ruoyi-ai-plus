@@ -126,4 +126,8 @@
 <!--        <appender-ref ref="sky_log"/>-->
     </root>
 
+    <!-- LangChain4j HTTP 请求/响应调试日志 -->
+    <logger name="dev.langchain4j.model.openai.OpenAiStreamingChatModel" level="DEBUG"/>
+    <logger name="dev.langchain4j.model.openai.OpenAiChatModel" level="DEBUG"/>
+
 </configuration>

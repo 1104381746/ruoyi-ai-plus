@@ -111,5 +111,10 @@ public class SysTenantBo extends BaseEntity {
      */
     private String status;
 
+    /**
+     * 是否默认租户（Y是 N否）
+     */
+    private String isDefault;
+
 
 }

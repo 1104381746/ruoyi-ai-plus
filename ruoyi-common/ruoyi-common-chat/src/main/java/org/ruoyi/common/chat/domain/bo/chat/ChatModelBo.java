@@ -1,9 +1,11 @@
 package org.ruoyi.common.chat.domain.bo.chat;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.linpeilie.annotations.AutoMapper;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.ruoyi.common.chat.entity.chat.ChatModel;
 import org.ruoyi.common.core.validate.EditGroup;
 import org.ruoyi.common.mybatis.core.domain.BaseEntity;
@@ -63,6 +65,8 @@ public class ChatModelBo extends BaseEntity {
     /**
      * 密钥
      */
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @ToString.Exclude
     private String apiKey;
 
     /**

@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.ruoyi.common.core.constant.CacheNames;
 import org.ruoyi.common.core.constant.SystemConstants;
+import org.ruoyi.common.core.constant.TenantConstants;
 import org.ruoyi.common.core.exception.ServiceException;
 import org.ruoyi.common.core.service.ConfigService;
 import org.ruoyi.common.core.utils.MapstructUtils;
@@ -81,8 +82,23 @@ public class SysConfigServiceImpl implements ISysConfigService, ConfigService {
     @Override
     public String selectConfigByKey(String configKey) {
         SysConfig retConfig = baseMapper.selectOne(new LambdaQueryWrapper<SysConfig>()
-            .eq(SysConfig::getConfigKey, configKey));
+            .eq(SysConfig::getConfigKey, configKey)
+            .last("LIMIT 1"));
         return ObjectUtils.notNullGetter(retConfig, SysConfig::getConfigValue, StringUtils.EMPTY);
+    }
+
+    /**
+     * 获取多租户开关（业务层）
+     * @return true开启，false关闭
+     */
+    @Override
+    public boolean selectMultiTenancyEnabled() {
+        String configValue = TenantHelper.dynamic(TenantConstants.DEFAULT_TENANT_ID, () ->
+            selectConfigByKey("sys.multiTenancy"));
+        if (StringUtils.isBlank(configValue)) {
+            return true;
+        }
+        return Convert.toBool(configValue);
     }
 
     /**
@@ -92,6 +108,9 @@ public class SysConfigServiceImpl implements ISysConfigService, ConfigService {
      */
     @Override
     public boolean selectRegisterEnabled(String tenantId) {
+        if (StringUtils.isBlank(tenantId)) {
+            return false;
+        }
         String configValue = TenantHelper.dynamic(tenantId, () ->
             this.selectConfigByKey("sys.account.registerUser")
         );

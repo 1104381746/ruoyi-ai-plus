@@ -21,8 +21,8 @@ public class AuthRedisStateCache implements AuthStateCache {
      */
     @Override
     public void cache(String key, String value) {
-        // 授权超时时间 默认三分钟
-        RedisUtils.setCacheObject(GlobalConstants.SOCIAL_AUTH_CODE_KEY + key, value, Duration.ofMinutes(3));
+        // 授权超时时间 默认十分钟
+        RedisUtils.setCacheObject(GlobalConstants.SOCIAL_AUTH_CODE_KEY + key, value, Duration.ofMinutes(10));
     }
 
     /**

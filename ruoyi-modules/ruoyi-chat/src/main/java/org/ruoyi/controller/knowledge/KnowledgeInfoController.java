@@ -5,7 +5,6 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.*;
-import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.ruoyi.common.satoken.utils.LoginHelper;
 import org.ruoyi.domain.bo.knowledge.KnowledgeInfoBo;
 import org.ruoyi.domain.vo.knowledge.KnowledgeInfoVo;
@@ -40,7 +39,6 @@ public class KnowledgeInfoController extends BaseController {
     /**
      * 查询知识库列表
      */
-    @SaCheckPermission("system:info:list")
     @GetMapping("/list")
     public TableDataInfo<KnowledgeInfoVo> list(KnowledgeInfoBo bo, PageQuery pageQuery) {
         return knowledgeInfoService.queryPageList(bo, pageQuery);
@@ -49,7 +47,6 @@ public class KnowledgeInfoController extends BaseController {
     /**
      * 导出知识库列表
      */
-    @SaCheckPermission("system:info:export")
     @Log(title = "知识库", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(KnowledgeInfoBo bo, HttpServletResponse response) {
@@ -62,7 +59,6 @@ public class KnowledgeInfoController extends BaseController {
      *
      * @param id 主键
      */
-    @SaCheckPermission("system:info:query")
     @GetMapping("/{id}")
     public R<KnowledgeInfoVo> getInfo(@NotNull(message = "主键不能为空")
                                      @PathVariable Long id) {
@@ -72,7 +68,6 @@ public class KnowledgeInfoController extends BaseController {
     /**
      * 新增知识库
      */
-    @SaCheckPermission("system:info:add")
     @Log(title = "知识库", businessType = BusinessType.INSERT)
     @RepeatSubmit()
     @PostMapping()
@@ -84,7 +79,6 @@ public class KnowledgeInfoController extends BaseController {
     /**
      * 修改知识库
      */
-    @SaCheckPermission("system:info:edit")
     @Log(title = "知识库", businessType = BusinessType.UPDATE)
     @RepeatSubmit()
     @PutMapping()
@@ -97,7 +91,6 @@ public class KnowledgeInfoController extends BaseController {
      *
      * @param ids 主键串
      */
-    @SaCheckPermission("system:info:remove")
     @Log(title = "知识库", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
     public R<Void> remove(@NotEmpty(message = "主键不能为空")

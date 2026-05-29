@@ -1,6 +1,5 @@
 package org.ruoyi.controller.mcp;
 
-import cn.dev33.satoken.annotation.SaCheckPermission;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.ruoyi.common.core.domain.R;
@@ -39,7 +38,6 @@ public class McpMarketController extends BaseController {
     /**
      * 查询市场列表
      */
-    @SaCheckPermission("mcp:market:list")
     @GetMapping("/list")
     public TableDataInfo<McpMarketVo> list(McpMarketBo bo, PageQuery pageQuery) {
         return mcpMarketService.selectPageList(bo, pageQuery);
@@ -48,7 +46,6 @@ public class McpMarketController extends BaseController {
     /**
      * 查询市场列表（不分页）
      */
-    @SaCheckPermission("mcp:market:list")
     @GetMapping("/all")
     public McpMarketListResult listAll(
         @RequestParam(required = false) String keyword,
@@ -59,7 +56,6 @@ public class McpMarketController extends BaseController {
     /**
      * 导出 MCP 市场列表
      */
-    @SaCheckPermission("mcp:market:export")
     @Log(title = "MCP市场管理", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
     public void export(McpMarketBo bo, HttpServletResponse response) {
@@ -72,7 +68,6 @@ public class McpMarketController extends BaseController {
      *
      * @param id 市场ID
      */
-    @SaCheckPermission("mcp:market:query")
     @GetMapping("/{id}")
     public R<McpMarketVo> getInfo(@PathVariable Long id) {
         return R.ok(mcpMarketService.selectById(id));
@@ -81,7 +76,6 @@ public class McpMarketController extends BaseController {
     /**
      * 新增市场
      */
-    @SaCheckPermission("mcp:market:add")
     @Log(title = "MCP市场管理", businessType = BusinessType.INSERT)
     @RepeatSubmit()
     @PostMapping
@@ -93,7 +87,6 @@ public class McpMarketController extends BaseController {
     /**
      * 修改市场
      */
-    @SaCheckPermission("mcp:market:edit")
     @Log(title = "MCP市场管理", businessType = BusinessType.UPDATE)
     @RepeatSubmit()
     @PutMapping
@@ -107,7 +100,6 @@ public class McpMarketController extends BaseController {
      *
      * @param ids 市场ID串
      */
-    @SaCheckPermission("mcp:market:remove")
     @Log(title = "MCP市场管理", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
     public R<Void> remove(@PathVariable Long[] ids) {
@@ -118,7 +110,6 @@ public class McpMarketController extends BaseController {
     /**
      * 更新市场状态
      */
-    @SaCheckPermission("mcp:market:edit")
     @Log(title = "MCP市场管理", businessType = BusinessType.UPDATE)
     @PutMapping("/{id}/status")
     public R<Void> updateStatus(@PathVariable Long id, @RequestParam String status) {
@@ -129,7 +120,6 @@ public class McpMarketController extends BaseController {
     /**
      * 获取市场工具列表（分页）
      */
-    @SaCheckPermission("mcp:market:query")
     @GetMapping("/{marketId}/tools")
     public McpMarketToolListResult getMarketTools(
         @PathVariable Long marketId,
@@ -141,7 +131,6 @@ public class McpMarketController extends BaseController {
     /**
      * 刷新市场工具列表
      */
-    @SaCheckPermission("mcp:market:edit")
     @Log(title = "MCP市场管理", businessType = BusinessType.UPDATE)
     @PostMapping("/{marketId}/refresh")
     public R<McpMarketRefreshResult> refreshMarketTools(@PathVariable Long marketId) {
@@ -151,7 +140,6 @@ public class McpMarketController extends BaseController {
     /**
      * 加载单个工具到本地
      */
-    @SaCheckPermission("mcp:market:add")
     @Log(title = "MCP市场管理", businessType = BusinessType.INSERT)
     @PostMapping("/tools/{toolId}/load")
     public R<Void> loadToolToLocal(@PathVariable Long toolId) {
@@ -162,7 +150,6 @@ public class McpMarketController extends BaseController {
     /**
      * 批量加载工具到本地
      */
-    @SaCheckPermission("mcp:market:add")
     @Log(title = "MCP市场管理", businessType = BusinessType.INSERT)
     @PostMapping("/tools/batch-load")
     public R<Map<String, Object>> batchLoadTools(@RequestBody List<Long> toolIds) {

@@ -47,6 +47,12 @@ public interface ISysConfigService {
     boolean selectRegisterEnabled(String tenantId);
 
     /**
+     * 获取多租户开关（业务层）
+     * @return true开启，false关闭
+     */
+    boolean selectMultiTenancyEnabled();
+
+    /**
      * 查询参数配置列表
      *
      * @param config 参数配置信息
